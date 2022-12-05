@@ -1,60 +1,15 @@
+"""
+    Uses Phil Chodrow's python code for hypergraph configuration model
+    to randomize a hypergraph. Keeps track of how many encapsulation
+    relationships are in the randomized data as the target variable
+    for Markov chain convergence.
+"""
+
 import sys
 import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
-
-def nodes_to_hyperedges(hyperedges):
-    """
-    Returns dictionary of nodes to hyperedges
-    they participate in when hyperedges is a
-    list-like of list-like edges.
-    """
-    nth = dict()
-    he_map = dict()
-    map_idx = 0
-    for idx, he in enumerate(hyperedges):
-        if he not in he_map:
-            he_map[he] = map_idx
-            map_idx += 1
-
-        for node in he:
-            if node not in nth:
-                nth[node] = set()
-            nth[node].add(he_map[he])
-    return nth, he_map
-
-def is_encapsulated(larger, smaller):
-    return len(set(larger).intersection(set(smaller))) == len(smaller)
-
-def encapsulation_dag(hyperedges):
-    # Compute node to hyperedges
-    nth, he_map = nodes_to_hyperedges(hyperedges)
-    rev_map = {val:key for key,val in he_map.items()}
-    # Construct the dag
-    dag = nx.DiGraph()
-
-    # Loop over hyperedges
-    for he_idx, he in enumerate(hyperedges):
-        dag.add_node(he)
-        candidates = set()
-        # Get all encapsulation candidate hyperedge ids
-        for node in he:
-            candidates.update([rev_map[i] for i in nth[node]])
-
-        # for each candidate
-        candidates_checked = set()
-        for cand in candidates:
-            if cand in candidates_checked:
-                continue
-            cand_idx = he_map[cand]
-            if len(he) > len(cand):
-                if is_encapsulated(he, cand):
-                    dag.add_edge(he, cand)
-            elif len(cand) > len(he):
-                if is_encapsulated(cand, he):
-                    dag.add_edge(cand, he)
-    return dag, nth, he_map
-
+from encapsulation_dag import *
 
 sys.path.append("../../hypergraph/")
 from hypergraph import *
@@ -62,6 +17,7 @@ from read import *
 from scipy.stats import rankdata
 
 # Slightly modifying Phil's read data frunction for arbitrary paths
+# to data in Austin Benson's format
 def read_data(path, t_min = None, t_max = None):
     # read in the data
     nverts = np.array([int(f.rstrip('\n')) for f in open(path + 'nverts.txt')])
@@ -107,8 +63,8 @@ datapath = sys.argv[1]
 datadir = "/".join(datapath.split("/")[0:-1])
 num_hypergraphs = int(sys.argv[2])
 steps_per_iter = int(sys.argv[3])
-from_random = True
-last_random = 99
+from_random = False
+last_random = 0
 remove_multiedges = False
 
 if not from_random:
