@@ -1,6 +1,4 @@
-sys.path.append("../../hypergraph/")
-from hypergraph import *
-from scipy.stats import rankdata
+import numpy as np
 
 """
 Slightly modifying Phil's read data frunction for arbitrary paths to data in Austin Benson's format
