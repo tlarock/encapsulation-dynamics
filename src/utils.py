@@ -3,7 +3,7 @@ import numpy as np
 """
 Slightly modifying Phil's read data frunction for arbitrary paths to data in Austin Benson's format
 """
-def read_data(path, t_min = None, t_max = None):
+def read_data(path, t_min = None, t_max = None, multiedges=True):
     # read in the data
     nverts = np.array([int(f.rstrip('\n')) for f in open(path + 'nverts.txt')])
     times = np.array([float(f.rstrip('\n')) for f in open(path + 'times.txt')])
@@ -30,7 +30,11 @@ def read_data(path, t_min = None, t_max = None):
     # format as list of lists
 
     l = np.split(simplices, np.cumsum(nverts))
-    C = [list(c) for c in l]
+    C = [list(c) for c in l if len(c) > 0]
+    if not multiedges:
+        C_set = set([tuple(c) for c in C])
+        C = [list(c) for c in C_set]
+
     return(C)
 
 """

@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from encapsulation_dag import *
 from utils import read_data, write_hypergraph
 sys.path.append("../../hypergraph/")
-
+from hypergraph import hypergraph
 # Get inputs
 datapath = sys.argv[1]
 # setup for outputinng random hypergraphs
@@ -21,15 +21,11 @@ num_hypergraphs = int(sys.argv[2])
 steps_per_iter = int(sys.argv[3])
 from_random = False
 last_random = 0
-remove_multiedges = False
+remove_multiedges = True
 
 if not from_random:
     # Read a hypergraph as a list of hyperedges
-    L = read_data(datapath)
-
-    if remove_multiedges:
-        tupL = set([tuple(c) for c in L])
-        L = [list(c) for c in tupL]
+    L = read_data(datapath, multiedges=not remove_multiedges)
 
     # Construct hypergraph
     G = hypergraph(L)
