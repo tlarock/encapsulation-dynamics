@@ -1,3 +1,4 @@
+import xgi
 import numpy as np
 
 """ To simulate and track the dynamics, I am going to give each node and hyperedge some attributes:
