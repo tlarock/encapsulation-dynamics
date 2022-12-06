@@ -6,6 +6,8 @@ from collections import Counter
 sys.path.append("../src/")
 from utils import read_data, read_random_hyperedges
 from encapsulation_dag import *
+sys.path.append("../../hypergraph/")
+from hypergraph import hypergraph
 
 sys.path.append("../../tr-dag-cycles/")
 from cycle_utilities import tr
@@ -24,9 +26,9 @@ def compute_dag_heights(dag):
             heights.append(sp_dict[target])
     return heights
 
-data_dir = "../had_data/"
+data_dir = "../data/"
 dataset = sys.argv[1]
-parallel_edges = True
+parallel_edges = False
 read_dags = False
 num_randomizations = 50
 

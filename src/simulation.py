@@ -32,13 +32,28 @@ def run_simulation(H, configuration):
         "nodes_activated": np.zeros(T),
         "edges_activated": np.zeros(T)
     }
+
+    # To speed things up slightly when doing size-biased sampling, I am
+    # maintaining three lists in reference to inactive edges:
+    # inactive_edges: The actual list of edge IDs
+    inactive_edges = list(H.edges.filterby_attr("active", 0))
+    # _sizes: # of nodes in each edge
+    inactive_edges_sizes = [float(len(H.edges.members(edge_id))) for edge_id in inactive_edges]
+    # _indices: List of indices matching across inactive_edges and _sizes
+    # This is the list we will actually sample from.
+    inactive_edges_indices = list(range(0, len(inactive_edges)))
+
     for t in range(T):
         # Check for saturation
-        if len(H.edges.filterby_attr("active", 0)) == 0:
+        if len(inactive_edges) == 0:
             break
 
         # Choose an edge using selection_function
-        edge_id = configuration["selection_function"](H)
+        edge_index = configuration["selection_function"](H,
+                                                      inactive_edges_sizes,
+                                                      inactive_edges_indices
+                                                     )
+        edge_id = inactive_edges[edge_index]
 
         # Note whether the edge was activte before and how many
         # of its constiuent nodes were already active
@@ -51,4 +66,30 @@ def run_simulation(H, configuration):
         if edge_active_before == 0 and H.edges[edge_id]["active"] == 1:
             results_dict["edges_activated"][t] = 1.0
             results_dict["nodes_activated"][t] = new_activations
+
+            # Remove edge from inactive_edges list
+            inactive_edges[edge_index] = inactive_edges[-1]
+            inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
+            inactive_edges.pop()
+            inactive_edges_sizes.pop()
+            inactive_edges_indices.pop()
+
     return H, results_dict
+
+"""
+    Runs multiple simulations on hyperedges using
+    settings in configuration. Returns a dictionary
+    with matrices of results for node and edge activation.
+"""
+def run_many_simulations(hyperedges, configuration):
+    output = dict()
+    for i in range(configuration["num_simulations"]):
+        H = xgi.Hypergraph(incoming_data=hyperedges)
+        H = initialize_dynamics(H, configuration)
+        H, results = run_simulation(H, configuration)
+        for key, vals_arr in results.items():
+            if key not in output:
+                output[key] = vals_arr
+            else:
+                output[key] = np.vstack((output[key], vals_arr))
+    return output

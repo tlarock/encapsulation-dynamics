@@ -3,11 +3,13 @@ Define functions for update rules.
 """
 
 """
+    up-threshold
+
     Activates all nodes in the hyperedge if more than
-    a number k (stored in configurations dict) of other
+    a number h (stored in configurations dict) of other
     nodes are already activated.
 """
-def absolute_update(H, edge_id, configuration, t):
+def absolute_update_up(H, edge_id, configuration, t):
     # Only consider inactive edges
     new_activations = 0
     if H.edges[edge_id]["active"] != 1:
@@ -17,36 +19,25 @@ def absolute_update(H, edge_id, configuration, t):
 
     return H, new_activations
 
-
 """
+    down-threshold
+
     Activates all nodes in the hyperedge if more than
-    a number k (stored in configurations dict) of other
+    a number k-h (stored in configurations dict) of other
     nodes are already activated.
 """
-def absolute_update_onehop(H, edge_id, configuration, t):
-    # If the edge is not yet active, check if it can be activated
-    activate = False
+def absolute_update_down(H, edge_id, configuration, t):
+    # Only consider inactive edges
     new_activations = 0
     if H.edges[edge_id]["active"] != 1:
         num_active = sum([H.nodes[node]["active"] for node in H.edges.members(edge_id)])
-        if num_active >= configuration["active_threshold"]:
-            activate = True
+        # Threshold is k-h or minimum of 1 (if h > k)
+        threshold = min(1, len(H.edges.members(edge_id)) - configuration["active_threshold"])
+        if num_active >= threshold:
+            H, new_activations = activate_edge(H, edge_id, t)
 
-    # If the edge is active
-    edges_to_activate = set()
-    if activate:
-        H, new_activations = activate_edge(H, edge_id, t)
-        # ToDo: This creates a second loop over the hyperedge
-        # in every activation step, which is kind of annoying
-        for node in H.edges.members(edge_id):
-            edges_to_activate.update(H.nodes.memberships(node))
-
-    # Activate all of the neighbor edges
-    for ne_edge_id in edges_to_activate:
-        if H.edges[ne_edge_id]["active"] != 1:
-            H, ne_new_activations = activate_edge(H, ne_edge_id, t)
-            new_activations += ne_new_activations
     return H, new_activations
+
 
 def activate_edge(H, edge_id, t):
     H.edges[edge_id]["active"] = 1
