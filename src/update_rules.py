@@ -31,8 +31,11 @@ def absolute_update_down(H, edge_id, configuration, t):
     new_activations = 0
     if H.edges[edge_id]["active"] != 1:
         num_active = sum([H.nodes[node]["active"] for node in H.edges.members(edge_id)])
-        # Threshold is k-h or minimum of 1 (if h > k)
-        threshold = min(1, len(H.edges.members(edge_id)) - configuration["active_threshold"])
+        k = len(H.edges.members(edge_id))
+        threshold = k - configuration["active_threshold"]
+        # NOTE: I am enforcing a threshold of at least 1 active node
+        if threshold <= 0:
+            threshold = 1
         if num_active >= threshold:
             H, new_activations = activate_edge(H, edge_id, t)
 
