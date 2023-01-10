@@ -28,9 +28,13 @@ def initialize_dynamics(H, configuration):
 
 def run_simulation(H, configuration):
     T = configuration["steps"]
+    # results_dict contains all of the results for this simulation.
+    # Many results can also be computed from H after a simulation, but
+    # for convenience I store them separately.
     results_dict = {
         "nodes_activated": np.zeros(T),
-        "edges_activated": np.zeros(T)
+        "edges_activated": np.zeros(T),
+        "activated_edge_sizes": np.zeros(T)
     }
 
     # To speed things up slightly when doing size-biased sampling, I am
@@ -53,6 +57,7 @@ def run_simulation(H, configuration):
                                                       inactive_edges_sizes,
                                                       inactive_edges_indices
                                                      )
+        # Get the edge id in H from the inactive_edges list
         edge_id = inactive_edges[edge_index]
 
         # Note whether the edge was activte before and how many
@@ -66,8 +71,10 @@ def run_simulation(H, configuration):
         if edge_active_before == 0 and H.edges[edge_id]["active"] == 1:
             results_dict["edges_activated"][t] = 1.0
             results_dict["nodes_activated"][t] = new_activations
+            results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
 
-            # Remove edge from inactive_edges list
+            # Remove edge from inactive_edges list by swapping with the final
+            # element, then popping the list
             inactive_edges[edge_index] = inactive_edges[-1]
             inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
             inactive_edges.pop()

@@ -15,7 +15,7 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, s
 
     output_obs = run_many_simulations(hyperedges, configuration)
     output_rnd = run_many_simulations(random_hyperedges, configuration)
-    fig, axs = plot_cumulative_averages(configuration, output_obs, output_rnd)
+    fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
     plot_filename = results_path
     plot_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
     plot_filename += f"_runs-{configuration['num_simulations']}"
@@ -39,8 +39,8 @@ def main_funct(hyperedges, random_hyperedges, configuration, results_path):
 if __name__ == "__main__":
     # Get the list of hyperedges from Austin's format
     #dataset_name = "contact-high-school"
-    #dataset_name = "contact-primary-school"
-    dataset_name = "coauth-MAG-Geology-full"
+    dataset_name = "contact-primary-school"
+    #dataset_name = "coauth-MAG-Geology-full"
 
     dataset_path = f"../data/{dataset_name}/{dataset_name}-"
     hyperedges = read_data(dataset_path, multiedges=False)
@@ -52,18 +52,18 @@ if __name__ == "__main__":
     results_path = f"../results/{dataset_name}/{dataset_name}"
 
 
-    configuration = {
-        "initial_active": 15_000,
-        "steps": 25000,
-        "active_threshold": 1,
-        "num_simulations": 5
-    }
-
     #configuration = {
-    #    "initial_active": 1,
-    #    "steps": 5000,
+    #    "initial_active": 15_000,
+    #    "steps": 50000,
     #    "active_threshold": 1,
-    #    "num_simulations": 100
+    #    "num_simulations": 5
     #}
+
+    configuration = {
+        "initial_active": 1,
+        "steps": 5000,
+        "active_threshold": 1,
+        "num_simulations": 100
+    }
 
     main_funct(hyperedges, random_hyperedges, configuration, results_path)
