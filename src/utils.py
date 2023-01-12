@@ -1,3 +1,4 @@
+import networkx as nx
 import numpy as np
 
 """
@@ -56,3 +57,25 @@ def read_random_hyperedges(filename):
             s = list(map(int, line.strip().split(',')))
             hyperedges.append(tuple(s))
     return hyperedges
+
+"""
+    Accept a list-like of hyperedges and construct
+    an undirected graph based on co-occurrence.
+"""
+def project_hyperedges(hyperedges):
+    G = nx.Graph()
+    for he in hyperedges:
+        for u in he:
+            for v in he:
+                if u != v:
+                    G.add_edge(u,v)
+    return G
+
+
+"""
+    Check the connectivity of the projection of
+    a set of hyperedges by calling project_hyperedges
+    then is_connected.
+"""
+def check_hyperedges_connectivity(hyperedges):
+    return nx.is_connected(project_hyperedges(hyperedges))
