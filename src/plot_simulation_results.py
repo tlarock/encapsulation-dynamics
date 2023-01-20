@@ -12,7 +12,7 @@ def plot_cumulative(configuration, results_obs, results_rnd):
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7,3), squeeze=False)
     fig.subplots_adjust(wspace=0.3)
 
-    x = list(range(configuration["steps"]))
+    x = list(range(configuration["steps"]+1))
     axs[0][0].plot(x, np.cumsum(results_obs["nodes_activated"]), label="Observed")
     axs[0][0].plot(x, np.cumsum(results_rnd["nodes_activated"]), label="Randomized")
     axs[0][0].set(xlabel="Time", ylabel="Cumulative Nodes Activated")
@@ -34,7 +34,7 @@ def plot_cumulative_averages(configuration, output_obs, output_rnd):
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7,3), squeeze=False)
     fig.subplots_adjust(wspace=0.3)
 
-    x = list(range(configuration["steps"]))
+    x = list(range(configuration["steps"]+1))
     labels = ["Cumulative Nodes Activated", "Cumulative Edges Activated"]
     for col_idx, key in enumerate(["nodes_activated", "edges_activated"]):
         mean = np.mean(np.cumsum(output_obs[key], axis=1), axis=0)
@@ -64,7 +64,7 @@ def plot_cumulative_averages_sizes(configuration, output_obs, output_rnd,
     fig, axs = plt.subplots(nrows=1, ncols=3, figsize=figsize, squeeze=False)
     fig.subplots_adjust(wspace=0.3)
 
-    x = list(range(configuration["steps"]))
+    x = list(range(configuration["steps"]+1))
     labels = ["Cumulative Nodes Activated", "Cumulative Edges Activated"]
     for col_idx, key in enumerate(["nodes_activated", "edges_activated"]):
         mean = np.mean(np.cumsum(output_obs[key], axis=1), axis=0)

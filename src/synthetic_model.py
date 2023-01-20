@@ -195,9 +195,11 @@ def construct_random_hyperedges(hyperedges):
         for size in sizes:
             edges = set()
             for _ in range(sizes[size]):
-                edge = tuple(np.random.choice(hyperedge_nodes, size, replace=False).tolist())
+                edge = tuple(sorted(np.random.choice(hyperedge_nodes, size,
+                                                     replace=False).tolist()))
                 while edge in edges:
-                    edge = tuple(np.random.choice(hyperedge_nodes, size, replace=False).tolist())
+                    edge = tuple(sorted(np.random.choice(hyperedge_nodes, size,
+                                                         replace=False).tolist()))
                 edges.add(edge)
             for e in edges:
                 random_hyperedges.append(e)

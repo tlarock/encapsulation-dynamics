@@ -10,7 +10,12 @@ def initialize_dynamics(H, configuration):
     for node in H.nodes:
         H.add_node(node, active = 0, activation_time = -1, activated_by = -1)
 
-    activated_nodes = np.random.choice(H.nodes, configuration["initial_active"])
+    if "seed_activated" in configuration and \
+       len(configuration["seed_activated"]) == configuration["initial_active"]:
+        activated_nodes = configuration["seed_activated"]
+    else:
+        activated_nodes = np.random.choice(H.nodes, configuration["initial_active"])
+
     for node in activated_nodes:
         H.nodes[node]["active"] = 1
         H.nodes[node]["activation_time"] = 0
@@ -32,10 +37,12 @@ def run_simulation(H, configuration):
     # Many results can also be computed from H after a simulation, but
     # for convenience I store them separately.
     results_dict = {
-        "nodes_activated": np.zeros(T),
-        "edges_activated": np.zeros(T),
-        "activated_edge_sizes": np.zeros(T)
+        "nodes_activated": np.zeros(T+1),
+        "edges_activated": np.zeros(T+1),
+        "activated_edge_sizes": np.zeros(T+1)
     }
+
+    results_dict["nodes_activated"][0] = len(list(H.nodes.filterby_attr("active", 1)))
 
     # To speed things up slightly when doing size-biased sampling, I am
     # maintaining three lists in reference to inactive edges:
@@ -47,7 +54,7 @@ def run_simulation(H, configuration):
     # This is the list we will actually sample from.
     inactive_edges_indices = list(range(0, len(inactive_edges)))
 
-    for t in range(T):
+    for t in range(1, T+1):
         # Check for saturation
         if len(inactive_edges) == 0:
             break

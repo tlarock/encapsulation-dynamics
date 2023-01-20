@@ -36,6 +36,7 @@ def absolute_update_down(H, edge_id, configuration, t):
         # NOTE: I am enforcing a threshold of at least 1 active node
         if threshold <= 0:
             threshold = 1
+
         if num_active >= threshold:
             H, new_activations = activate_edge(H, edge_id, t)
 
