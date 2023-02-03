@@ -7,20 +7,28 @@ import numpy as np
      activated_by (node only): ID of the hyperedge that activated the node. Default -1.
 """
 def initialize_dynamics(H, configuration):
+
+    # All nodes are given active status 0 to start
     for node in H.nodes:
         H.add_node(node, active = 0, activation_time = -1, activated_by = -1)
 
+    # Seed nodes can either be predetermined, chosen by a function, or chosen at random
     if "seed_activated" in configuration and \
        len(configuration["seed_activated"]) == configuration["initial_active"]:
         activated_nodes = configuration["seed_activated"]
+    elif "seed_function" in configuration:
+        activated_nodes = configuration["seed_function"](H, configuration)
     else:
         activated_nodes = np.random.choice(H.nodes, configuration["initial_active"])
 
+    # Change the active status of the seed nodes
     for node in activated_nodes:
         H.nodes[node]["active"] = 1
         H.nodes[node]["activation_time"] = 0
+        # Arbitrary value to indicate which nodes are seeds
         H.nodes[node]["activated_by"] = -10
 
+    # All edges are initially inactive
     edge_attribute_dict = dict()
     for edge_id in H.edges:
         edge_attribute_dict[edge_id] = {
@@ -28,6 +36,7 @@ def initialize_dynamics(H, configuration):
             "activation_time":0
         }
     xgi.set_edge_attributes(H, values=edge_attribute_dict)
+
     return H
 
 
@@ -42,6 +51,7 @@ def run_simulation(H, configuration):
         "activated_edge_sizes": np.zeros(T+1)
     }
 
+    # Store the number of initially active nodes
     results_dict["nodes_activated"][0] = len(list(H.nodes.filterby_attr("active", 1)))
 
     # To speed things up slightly when doing size-biased sampling, I am
