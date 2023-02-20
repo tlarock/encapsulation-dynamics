@@ -8,18 +8,23 @@ import matplotlib.pyplot as plt
     results_obs and results_rnd are outputs of run_simulation function
     in run_simulation.py.
 """
-def plot_cumulative(configuration, results_obs, results_rnd):
+def plot_cumulative(configuration, results_obs, results_rnd,
+                    first_label="Observed", second_label="Randomized"):
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7,3), squeeze=False)
     fig.subplots_adjust(wspace=0.3)
 
     x = list(range(configuration["steps"]+1))
-    axs[0][0].plot(x, np.cumsum(results_obs["nodes_activated"]), label="Observed")
-    axs[0][0].plot(x, np.cumsum(results_rnd["nodes_activated"]), label="Randomized")
+    axs[0][0].plot(x, np.cumsum(results_obs["nodes_activated"]),
+                   label=first_label)
+    axs[0][0].plot(x, np.cumsum(results_rnd["nodes_activated"]),
+                   label=second_label)
     axs[0][0].set(xlabel="Time", ylabel="Cumulative Nodes Activated")
     axs[0][0].legend()
 
-    axs[0][1].plot(x, np.cumsum(results_obs["edges_activated"]), label="Observed")
-    axs[0][1].plot(x, np.cumsum(results_rnd["edges_activated"]), label="Randomized")
+    axs[0][1].plot(x, np.cumsum(results_obs["edges_activated"]),
+                   label=first_label)
+    axs[0][1].plot(x, np.cumsum(results_rnd["edges_activated"]),
+                   label=second_label)
     axs[0][1].set(xlabel="Time", ylabel="Cumulative Edges Activated")
     return fig, axs
 
