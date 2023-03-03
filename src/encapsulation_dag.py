@@ -22,9 +22,20 @@ def nodes_to_hyperedges(hyperedges):
             nth[node].add(he_map[he])
     return nth, he_map
 
+"""
+    Returns true if smaller is a subset of larger.
+"""
 def is_encapsulated(larger, smaller):
     return len(set(larger).intersection(set(smaller))) == len(smaller)
 
+"""
+    Accepts a list of hyperedges and constructs an encapsulation DAG.
+
+    Returns
+    dag (nx.DiGraph()): the encapsulation dag
+    nth (dict): dictionary mapping nodes to ids of hyperedges they are members of
+    he_map (dict): dictionary mapping hyperedge id to hyperedge
+"""
 def encapsulation_dag(hyperedges):
     # Compute node to hyperedges
     nth, he_map = nodes_to_hyperedges(hyperedges)
