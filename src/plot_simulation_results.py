@@ -115,3 +115,25 @@ def plot_cumulative_averages_sizes(configuration, output_obs, output_rnd,
     axs[0][col_idx].set(xlabel="Time", ylabel="Average Size")
 
     return fig, axs
+
+
+"""
+    Plot average cumulative activations of nodes/edges over multiple
+    simulations based on a dictionary with many simulation results.
+"""
+def plot_cumulative_fromdict(configuration, outputs):
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7,3), squeeze=False)
+    fig.subplots_adjust(wspace=0.3)
+
+    x = list(range(configuration["steps"]+1))
+    labels = ["Cumulative Nodes Activated", "Cumulative Edges Activated"]
+    for col_idx, key in enumerate(["nodes_activated", "edges_activated"]):
+        for exp in outputs:
+            mean = np.mean(np.cumsum(outputs[exp][key], axis=1), axis=0)
+            std = np.std(np.cumsum(outputs[exp][key], axis=1), axis=0)
+            axs[0][col_idx].plot(x, mean, label=exp)
+            axs[0][col_idx].fill_between(x, mean-std, mean+std, alpha=0.15)
+
+        axs[0][col_idx].set(xlabel="Time", ylabel=labels[col_idx])
+    axs[0][0].legend()
+    return fig, axs
