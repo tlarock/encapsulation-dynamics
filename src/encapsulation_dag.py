@@ -154,3 +154,80 @@ def get_overlap_dists(dag, max_n=float('inf'), max_m=float('inf'),
 
 
     return overlap
+
+
+"""
+    Accepts a list of hyperedges and constructs an overlap DAG with edge
+    weight attribute corresponding to the size of the overlap between
+    the hyperedges. An edge from node i to node j means that that two overlap
+    and i is larger than j.
+
+    Returns
+    dag (nx.DiGraph()): the overlap dag
+    nth (dict): dictionary mapping nodes to ids of hyperedges they are members of
+    he_map (dict): dictionary mapping hyperedge id to hyperedge
+"""
+def overlap_dag(hyperedges):
+    # Compute node to hyperedges
+    nth, he_map = nodes_to_hyperedges(hyperedges)
+    rev_map = {val:key for key,val in he_map.items()}
+    # Construct the dag
+    dag = nx.DiGraph()
+    # Loop over hyperedges
+    for he_idx, he in enumerate(hyperedges):
+        dag.add_node(he)
+        candidates = set()
+        # Get all encapsulation candidate hyperedge ids
+        for node in he:
+            candidates.update([rev_map[i] for i in nth[node]])
+        # for each candidate
+        candidates_checked = set()
+        for cand in candidates:
+            if cand in candidates_checked:
+                continue
+            cand_idx = he_map[cand]
+            if len(he) > len(cand):
+                dag.add_edge(he, cand,
+                             weight=len(set(he).intersection(set(cand))) / len(cand))
+            elif len(cand) > len(he):
+                dag.add_edge(cand, he,
+                             weight=len(set(he).intersection(set(cand))) / len(he))
+
+    return dag, nth, he_map
+
+
+"""
+    Accepts a list of hyperedges and constructs an overlap graph with edge
+    weight attribute corresponding to the size of the overlap between
+    the hyperedges. An edge from node i to node j means that that two overlap.
+
+    Returns
+    dag (nx.DiGraph()): the overlap graph
+    nth (dict): dictionary mapping nodes to ids of hyperedges they are members of
+    he_map (dict): dictionary mapping hyperedge id to hyperedge
+"""
+def overlap_graph(hyperedges):
+    # Compute node to hyperedges
+    nth, he_map = nodes_to_hyperedges(hyperedges)
+    rev_map = {val:key for key,val in he_map.items()}
+    # Construct the graph 
+    G = nx.Graph()
+    # Loop over hyperedges
+    for he_idx, he in enumerate(hyperedges):
+        G.add_node(he)
+        candidates = set()
+        # Get all encapsulation candidate hyperedge ids
+        for node in he:
+            candidates.update([rev_map[i] for i in nth[node]])
+        # for each candidate
+        candidates_checked = set([he])
+        for cand in candidates:
+            if cand in candidates_checked:
+                continue
+            cand_idx = he_map[cand]
+
+            if not G.has_edge(he, cand):
+                w = len(set(he).intersection(set(cand))) / min([len(cand), len(he)])
+                G.add_edge(he, cand, weight=w)
+
+    return G, nth, he_map
