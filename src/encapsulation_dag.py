@@ -188,10 +188,13 @@ def overlap_dag(hyperedges):
             cand_idx = he_map[cand]
             if len(he) > len(cand):
                 dag.add_edge(he, cand,
-                             weight=len(set(he).intersection(set(cand))) / len(cand))
+                             weight=len(set(he).intersection(set(cand))) / len(cand),
+                             overlap=len(set(he).intersection(set(cand))))
             elif len(cand) > len(he):
                 dag.add_edge(cand, he,
-                             weight=len(set(he).intersection(set(cand))) / len(he))
+                             weight=len(set(he).intersection(set(cand))) / len(he),
+                             overlap=len(set(he).intersection(set(cand))))
+
 
     return dag, nth, he_map
 
