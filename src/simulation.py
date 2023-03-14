@@ -69,35 +69,64 @@ def run_simulation(H, configuration):
         if len(inactive_edges) == 0:
             break
 
-        # Choose an edge using selection_function
-        edge_index = configuration["selection_function"](H,
-                                                      inactive_edges_sizes,
-                                                      inactive_edges_indices
-                                                     )
-        # Get the edge id in H from the inactive_edges list
-        edge_id = inactive_edges[edge_index]
+        if configuration["single_edge_update"]:
+            # Choose an edge using selection_function
+            edge_index = configuration["selection_function"](H,
+                                                          inactive_edges_sizes,
+                                                          inactive_edges_indices
+                                                         )
+            # Get the edge id in H from the inactive_edges list
+            edge_id = inactive_edges[edge_index]
 
-        # Note whether the edge was activte before and how many
-        # of its constiuent nodes were already active
-        edge_active_before = H.edges[edge_id]["active"]
+            # Note whether the edge was activte before and how many
+            # of its constiuent nodes were already active
+            edge_active_before = H.edges[edge_id]["active"]
 
-        # Run the updae function
-        H, new_activations = configuration["update_function"](H, edge_id, configuration, t)
+            # Run the updae function
+            H, new_activations = configuration["update_function"](H, edge_id, configuration, t)
 
-        # If the edge was activated in this timestep, update the time series
-        if edge_active_before == 0 and H.edges[edge_id]["active"] == 1:
-            results_dict["edges_activated"][t] = 1.0
-            results_dict["nodes_activated"][t] = new_activations
-            results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
+            # If the edge was activated in this timestep, update the time series
+            if edge_active_before == 0 and H.edges[edge_id]["active"] == 1:
+                results_dict["edges_activated"][t] = 1.0
+                results_dict["nodes_activated"][t] = new_activations
+                results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
 
-            # Remove edge from inactive_edges list by swapping with the final
-            # element, then popping the list
-            inactive_edges[edge_index] = inactive_edges[-1]
-            inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
-            inactive_edges.pop()
-            inactive_edges_sizes.pop()
-            inactive_edges_indices.pop()
+                # Remove edge from inactive_edges list by swapping with the final
+                # element, then popping the list
+                inactive_edges[edge_index] = inactive_edges[-1]
+                inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
+                inactive_edges.pop()
+                inactive_edges_sizes.pop()
+                inactive_edges_indices.pop()
+        else:
+            H_update = xgi.Hypergraph(H)
+            for edge_index in inactive_edges_indices:
+                # Get the edge id in H from the inactive_edges list
+                edge_id = inactive_edges[edge_index]
 
+                # Note whether the edge was activte before and how many
+                # of its constiuent nodes were already active
+                edge_active_before = H.edges[edge_id]["active"]
+
+                # Run the updae function
+                H_update, new_activations = configuration["update_function"](H_update, edge_id, configuration, t)
+
+                # If the edge was activated in this timestep, update the time series
+                if edge_active_before == 0 and H_update.edges[edge_id]["active"] == 1:
+                    results_dict["edges_activated"][t] += 1.0
+                    results_dict["nodes_activated"][t] += new_activations
+                    # ToDo FixMe: This is wrong now! Need to make it list-like
+                    results_dict["activated_edge_sizes"][t] = float(len(H_update.edges.members(edge_id)))
+
+                    # Remove edge from inactive_edges list by swapping with the final
+                    # element, then popping the list
+                    inactive_edges[edge_index] = inactive_edges[-1]
+                    inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
+                    inactive_edges.pop()
+                    inactive_edges_sizes.pop()
+                    inactive_edges_indices.pop()
+
+                H = H_update
     return H, results_dict
 
 """
