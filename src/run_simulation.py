@@ -1,5 +1,6 @@
 import sys
 import configparser
+from pathlib import Path
 
 import xgi
 
@@ -49,17 +50,23 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read(config_file)
     dataset_name = config[config_key]["dataset_name"]
+    data_prefix = config["default"]["data_prefix"]
 
-    dataset_path = f"../data/{dataset_name}/{dataset_name}-"
+    dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
 
     # Get the list of hyperedges from Austin's format
     hyperedges = read_data(dataset_path, multiedges=False)
 
     # Get the list of randomized hyperedges
-    random_path = f"../data/{dataset_name}/"
+    random_path = f"{data_prefix}{dataset_name}/"
     random_hyperedges = read_random_hyperedges(random_path + "randomizations/random-simple-0.txt")
 
-    results_path = f"../results/{dataset_name}/{dataset_name}"
+    results_prefix = config["default"]["results_prefix"]
+    results_path = f"{results_prefix}{dataset_name}/"
+
+    Path(results_path).mkdir(parents=True, exist_ok=True)
+
+    results_path += f"{dataset_name}"
 
     configuration = {
         "initial_active": config[config_key].getint("initial_active"),
