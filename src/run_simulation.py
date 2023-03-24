@@ -1,5 +1,6 @@
 import sys
-import configparser
+import os
+from configparser import ConfigParser
 from pathlib import Path
 
 import xgi
@@ -47,8 +48,10 @@ def main_funct(hyperedges, random_hyperedges, configuration, results_path):
 if __name__ == "__main__":
     config_file = sys.argv[1]
     config_key = sys.argv[2]
-    config = configparser.ConfigParser()
+    config = ConfigParser(os.environ)
     config.read(config_file)
+
+    # Read dataset name and location
     dataset_name = config[config_key]["dataset_name"]
     data_prefix = config["default"]["data_prefix"]
 
@@ -64,10 +67,12 @@ if __name__ == "__main__":
     results_prefix = config["default"]["results_prefix"]
     results_path = f"{results_prefix}{dataset_name}/"
 
+    # Create output directory
     Path(results_path).mkdir(parents=True, exist_ok=True)
 
     results_path += f"{dataset_name}"
 
+    # Read configuration parameters
     configuration = {
         "initial_active": config[config_key].getint("initial_active"),
         "steps": config[config_key].getint("steps"),
@@ -77,3 +82,4 @@ if __name__ == "__main__":
     }
 
     main_funct(hyperedges, random_hyperedges, configuration, results_path)
+    print("Done")
