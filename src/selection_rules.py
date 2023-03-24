@@ -24,9 +24,6 @@ def biased_inactive(H, inactive_edges_sizes,
                      inactive_edges_indices):
 
     edge_sizes = np.array(inactive_edges_sizes)
-    if inverse:
-        edge_sizes = 1.0 / inactive_edges_sizes
-
     edge_sizes /= edge_sizes.sum()
     index = np.random.choice(inactive_edges_indices, p=edge_sizes)
     return index

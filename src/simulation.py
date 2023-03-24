@@ -115,7 +115,8 @@ def run_simulation(H, configuration):
                 if edge_active_before == 0 and H_update.edges[edge_id]["active"] == 1:
                     results_dict["edges_activated"][t] += 1.0
                     results_dict["nodes_activated"][t] += new_activations
-                    # ToDo FixMe: This is wrong now! Need to make it list-like
+                    # ToDo FixMe: This is wrong for simultaneous update. Need to
+                    # make it list-like.
                     results_dict["activated_edge_sizes"][t] = float(len(H_update.edges.members(edge_id)))
 
                     # Remove edge from inactive_edges list by swapping with the final

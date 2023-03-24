@@ -1,4 +1,8 @@
+import sys
+import configparser
+
 import xgi
+
 import numpy as np
 from multiprocessing import Pool
 from utils import read_data, read_random_hyperedges
@@ -27,8 +31,11 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, s
 
 def main_funct(hyperedges, random_hyperedges, configuration, results_path):
     args = []
-    for selection_name, selection_funct in [("uniform", uniform_inactive), ("biased", biased_inactive)]:
-        for update_name, update_funct in [("up", absolute_update_up), ("down", absolute_update_down)]:
+    for selection_name, selection_funct in [("uniform", uniform_inactive),
+                                            ("biased", biased_inactive),
+                                            ("inverse", inverse_inactive)]:
+        for update_name, update_funct in [("up", absolute_update_up),
+                                          ("down", absolute_update_down)]:
             args.append((hyperedges, random_hyperedges, configuration, selection_name, selection_funct,
                      update_name, update_funct, results_path))
 
@@ -37,12 +44,15 @@ def main_funct(hyperedges, random_hyperedges, configuration, results_path):
     return None
 
 if __name__ == "__main__":
-    # Get the list of hyperedges from Austin's format
-    #dataset_name = "contact-high-school"
-    dataset_name = "contact-primary-school"
-    #dataset_name = "coauth-MAG-Geology-full"
+    config_file = sys.argv[1]
+    config_key = sys.argv[2]
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    dataset_name = config[config_key]["dataset_name"]
 
     dataset_path = f"../data/{dataset_name}/{dataset_name}-"
+
+    # Get the list of hyperedges from Austin's format
     hyperedges = read_data(dataset_path, multiedges=False)
 
     # Get the list of randomized hyperedges
@@ -51,19 +61,12 @@ if __name__ == "__main__":
 
     results_path = f"../results/{dataset_name}/{dataset_name}"
 
-
-    #configuration = {
-    #    "initial_active": 15_000,
-    #    "steps": 50000,
-    #    "active_threshold": 1,
-    #    "num_simulations": 5
-    #}
-
     configuration = {
-        "initial_active": 1,
-        "steps": 5000,
-        "active_threshold": 1,
-        "num_simulations": 100
+        "initial_active": config[config_key].getint("initial_active"),
+        "steps": config[config_key].getint("steps"),
+        "active_threshold": config[config_key].getint("active_threshold"),
+        "num_simulations": config[config_key].getint("num_simulations"),
+        "single_edge_update": config[config_key].getboolean("single_edge_update")
     }
 
     main_funct(hyperedges, random_hyperedges, configuration, results_path)
