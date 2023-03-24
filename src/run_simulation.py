@@ -21,6 +21,9 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, s
 
     output_obs = run_many_simulations(hyperedges, configuration)
     output_rnd = run_many_simulations(random_hyperedges, configuration)
+
+    # ToDo: Output results to a file
+
     fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
     plot_filename = results_path
     plot_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
