@@ -1,6 +1,7 @@
 import sys
 import os
 import pickle
+import argparse
 
 from configparser import ConfigParser
 from pathlib import Path
@@ -8,21 +9,30 @@ from pathlib import Path
 import xgi
 
 import numpy as np
-from multiprocessing import Pool
 from utils import read_data, read_random_hyperedges
 from update_rules import *
+# ToDo: There is probably a nicer way to export this!
+UPDATE_FUNCT_MAP = {
+    "up": absolute_update_up,
+    "down": absolute_update_down
+}
+
 from selection_rules import *
+# ToDo: There is probably a nicer way to export this!
+SELECTION_FUNCT_MAP = {
+    "uniform": uniform_inactive,
+    "biased": biased_inactive,
+    "inverse": inverse_inactive
+}
+
 from simulation import *
 from plot_simulation_results import *
 
-def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, selection_funct,
-                 update_name, update_funct, results_path):
+def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
+                 update_name, results_path, ncpus):
     print(f"Running {selection_name} {update_name}")
-    configuration["selection_function"] = selection_funct
-    configuration["update_function"] = update_funct
-
-    output_obs = run_many_simulations(hyperedges, configuration)
-    output_rnd = run_many_simulations(random_hyperedges, configuration)
+    output_obs = run_many_parallel(hyperedges, configuration, ncpus)
+    output_rnd = run_many_parallel(random_hyperedges, configuration, ncpus)
 
     fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
     plot_filename = results_path
@@ -39,29 +49,27 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, s
     return None
 
 
-def main_funct(hyperedges, random_hyperedges, configuration, results_path):
-    args = []
-    for selection_name, selection_funct in [("uniform", uniform_inactive),
-                                            ("biased", biased_inactive),
-                                            ("inverse", inverse_inactive)]:
-        for update_name, update_funct in [("up", absolute_update_up),
-                                          ("down", absolute_update_down)]:
-            args.append((hyperedges, random_hyperedges, configuration, selection_name, selection_funct,
-                     update_name, update_funct, results_path))
-
-    with Pool(len(args)) as p:
-        p.starmap(run_and_plot, args)
-    return None
-
 if __name__ == "__main__":
-    config_file = sys.argv[1]
-    config_key = sys.argv[2]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config_file", type=str, help="Path to configuration file.")
+    parser.add_argument("config_key", type=str, help="Key in config file. Usualy dataset name.")
+    parser.add_argument("selection_funct", type=str, help="Name of selection function to use.")
+    parser.add_argument("update_funct", type=str, help="Name of update function to use.")
+    parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
+    parser.add_argument("--default_key", type=str, help="Default key for config file.", default="default-arc", required=False)
+    args = parser.parse_args()
+    config_file = args.config_file
+    config_key = args.config_key
+    selection_name = args.selection_funct
+    update_name = args.update_funct
+    default_key = args.default_key
+
     config = ConfigParser(os.environ)
     config.read(config_file)
 
     # Read dataset name and location
     dataset_name = config[config_key]["dataset_name"]
-    data_prefix = config["default"]["data_prefix"]
+    data_prefix = config[default_key]["data_prefix"]
 
     dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
 
@@ -72,7 +80,7 @@ if __name__ == "__main__":
     random_path = f"{data_prefix}{dataset_name}/"
     random_hyperedges = read_random_hyperedges(random_path + "randomizations/random-simple-0.txt")
 
-    results_prefix = config["default"]["results_prefix"]
+    results_prefix = config[default_key]["results_prefix"]
     results_path = f"{results_prefix}{dataset_name}/"
 
     # Create output directory
@@ -86,8 +94,12 @@ if __name__ == "__main__":
         "steps": config[config_key].getint("steps"),
         "active_threshold": config[config_key].getint("active_threshold"),
         "num_simulations": config[config_key].getint("num_simulations"),
-        "single_edge_update": config[config_key].getboolean("single_edge_update")
+        "single_edge_update": config[config_key].getboolean("single_edge_update"),
+        "selection_function": SELECTION_FUNCT_MAP[selection_name],
+        "update_function": UPDATE_FUNCT_MAP[update_name]
     }
 
-    main_funct(hyperedges, random_hyperedges, configuration, results_path)
+    run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
+                 update_name, results_path, args.ncpus)
+
     print("Done")
