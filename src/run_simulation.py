@@ -50,6 +50,7 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
 
 
 if __name__ == "__main__":
+    # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file", type=str, help="Path to configuration file.")
     parser.add_argument("config_key", type=str, help="Key in config file. Usualy dataset name.")
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     update_name = args.update_funct
     default_key = args.default_key
 
+    # Parse configuration file
     config = ConfigParser(os.environ)
     config.read(config_file)
 
