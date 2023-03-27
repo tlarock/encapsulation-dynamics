@@ -56,11 +56,13 @@ if __name__ == "__main__":
     parser.add_argument("selection_funct", type=str, help="Name of selection function to use.")
     parser.add_argument("update_funct", type=str, help="Name of update function to use.")
     parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
+    parser.add_argument("default_key", type=str, help="Default key for config file.", default="default-arc")
     args = parser.parse_args()
     config_file = args.config_file
     config_key = args.config_key
     selection_name = args.selection_funct
     update_name = args.update_funct
+    default_key = args.default_key
 
     config = ConfigParser(os.environ)
     config.read(config_file)
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     random_path = f"{data_prefix}{dataset_name}/"
     random_hyperedges = read_random_hyperedges(random_path + "randomizations/random-simple-0.txt")
 
-    results_prefix = config["default"]["results_prefix"]
+    results_prefix = config[default_key]["results_prefix"]
     results_path = f"{results_prefix}{dataset_name}/"
 
     # Create output directory
