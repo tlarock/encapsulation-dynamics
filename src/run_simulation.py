@@ -29,10 +29,10 @@ from simulation import *
 from plot_simulation_results import *
 
 def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
-                 update_name, results_path):
+                 update_name, results_path, ncpus):
     print(f"Running {selection_name} {update_name}")
-    output_obs = run_many_simulations(hyperedges, configuration)
-    output_rnd = run_many_simulations(random_hyperedges, configuration)
+    output_obs = run_many_parallel(hyperedges, configuration, ncpus)
+    output_rnd = run_many_parallel(random_hyperedges, configuration, ncpus)
 
     fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
     plot_filename = results_path
@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("config_key", type=str, help="Key in config file. Usualy dataset name.")
     parser.add_argument("selection_funct", type=str, help="Name of selection function to use.")
     parser.add_argument("update_funct", type=str, help="Name of update function to use.")
+    parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
     args = parser.parse_args()
     config_file = args.config_file
     config_key = args.config_key
@@ -96,6 +97,7 @@ if __name__ == "__main__":
         "update_function": UPDATE_FUNCT_MAP[update_name]
     }
 
-    run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, update_name, results_path)
+    run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
+                 update_name, results_path, args.ncpus)
 
     print("Done")

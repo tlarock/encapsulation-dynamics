@@ -1,5 +1,6 @@
 import xgi
 import numpy as np
+from multiprocessing import Pool
 
 """ To simulate and track the dynamics, I am going to give each node and hyperedge some attributes:
      active: 0 if inactive, 1 if active
@@ -141,6 +142,32 @@ def run_many_simulations(hyperedges, configuration):
         H = xgi.Hypergraph(incoming_data=hyperedges)
         H = initialize_dynamics(H, configuration)
         H, results = run_simulation(H, configuration)
+        for key, vals_arr in results.items():
+            if key not in output:
+                output[key] = vals_arr
+            else:
+                output[key] = np.vstack((output[key], vals_arr))
+    return output
+
+
+"""
+    Runs multiple simulations in parallel using multiprocessing
+    on hyperedges using settings in configuration. Returns a dictionary
+    with matrices of results for node and edge activation.
+"""
+def run_many_parallel(hyperedges, configuration, ncpus):
+    num_sims = configuration["num_simulations"]
+    print(f"Running {num_sims} simulations on {ncpus} cpus.")
+    args = []
+    for i in range(num_sims):
+        args.append((initialize_dynamics(xgi.Hypergraph(incoming_data=hyperedges),
+                                        configuration), configuration))
+
+    with Pool(ncpus) as p:
+        results_list = p.starmap(run_simulation, args)
+
+    output = dict()
+    for _, results in results_list:
         for key, vals_arr in results.items():
             if key not in output:
                 output[key] = vals_arr
