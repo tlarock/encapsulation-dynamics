@@ -1,5 +1,7 @@
 import sys
 import os
+import pickle
+
 from configparser import ConfigParser
 from pathlib import Path
 
@@ -22,8 +24,6 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, s
     output_obs = run_many_simulations(hyperedges, configuration)
     output_rnd = run_many_simulations(random_hyperedges, configuration)
 
-    # ToDo: Output results to a file
-
     fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
     plot_filename = results_path
     plot_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
@@ -31,6 +31,11 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name, s
     fig.tight_layout()
     fig.savefig(plot_filename + ".pdf", dpi=150)
     fig.savefig(plot_filename + ".png", dpi=150)
+
+    # Output data
+    with open(plot_filename + ".pickle", "wb") as fpickle:
+        pickle.dump({"observed":output_obs, "random":output_rnd}, fpickle)
+
     return None
 
 
