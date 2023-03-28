@@ -28,32 +28,6 @@ SELECTION_FUNCT_MAP = {
 from simulation import *
 from plot_simulation_results import *
 
-def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
-                 update_name, results_path, ncpus):
-    print(f"Running {selection_name} {update_name}")
-    if ncpus > 1:
-        output_obs = run_many_parallel(hyperedges, configuration, ncpus)
-        output_rnd = run_many_parallel(random_hyperedges, configuration, ncpus)
-    else:
-        output_obs = run_many_simulations(hyperedges, configuration)
-        output_rnd = run_many_simulations(random_hyperedges, configuration)
-
-
-    fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
-    plot_filename = results_path
-    plot_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
-    plot_filename += f"_runs-{configuration['num_simulations']}"
-    fig.tight_layout()
-    fig.savefig(plot_filename + ".pdf", dpi=150)
-    fig.savefig(plot_filename + ".png", dpi=150)
-
-    # Output data
-    with open(plot_filename + ".pickle", "wb") as fpickle:
-        pickle.dump({"observed":output_obs, "random":output_rnd}, fpickle)
-
-    return None
-
-
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser()
@@ -63,13 +37,17 @@ if __name__ == "__main__":
     parser.add_argument("update_funct", type=str, help="Name of update function to use.")
     parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
     parser.add_argument("--default_key", type=str, help="Default key for config file.", default="default-arc", required=False)
+    parser.add_argument("--randomization_number", type=int, help="If >=0, will \
+                        try to run on that randomization of the dataset.",
+                        default=-1, required=False)
     args = parser.parse_args()
     config_file = args.config_file
     config_key = args.config_key
     selection_name = args.selection_funct
     update_name = args.update_funct
+    ncpus = args.ncpus
     default_key = args.default_key
-
+    randomization_number = args.randomization_number
     # Parse configuration file
     config = ConfigParser(os.environ)
     config.read(config_file)
@@ -78,15 +56,6 @@ if __name__ == "__main__":
     dataset_name = config[config_key]["dataset_name"]
     data_prefix = config[default_key]["data_prefix"]
 
-    dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
-
-    # Get the list of hyperedges from Austin's format
-    hyperedges = read_data(dataset_path, multiedges=False)
-
-    # Get the list of randomized hyperedges
-    random_path = f"{data_prefix}{dataset_name}/"
-    random_hyperedges = read_random_hyperedges(random_path + "randomizations/random-simple-0.txt")
-
     results_prefix = config[default_key]["results_prefix"]
     results_path = f"{results_prefix}{dataset_name}/"
 
@@ -94,6 +63,17 @@ if __name__ == "__main__":
     Path(results_path).mkdir(parents=True, exist_ok=True)
 
     results_path += f"{dataset_name}"
+
+    if randomization_number < 0:
+        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
+
+        # Get the list of hyperedges from Austin's format
+        hyperedges = read_data(dataset_path, multiedges=False)
+    else:
+        # Get the list of randomized hyperedges
+        random_path = f"{data_prefix}{dataset_name}/"
+        hyperedges = read_random_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+        results_path += f"_randomization-{randomization_number}"
 
     # Read configuration parameters
     configuration = {
@@ -106,7 +86,18 @@ if __name__ == "__main__":
         "update_function": UPDATE_FUNCT_MAP[update_name]
     }
 
-    run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
-                 update_name, results_path, args.ncpus)
+    print(f"Running {selection_name} {update_name}")
+    if ncpus > 1:
+        output = run_many_parallel(hyperedges, configuration, ncpus)
+    else:
+        output = run_many_simulations(hyperedges, configuration)
+
+    # Output data
+    output_filename = results_path
+    output_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
+    output_filename += f"_runs-{configuration['num_simulations']}"
+
+    with open(output_filename + ".pickle", "wb") as fpickle:
+        pickle.dump(output, fpickle)
 
     print("Done")
