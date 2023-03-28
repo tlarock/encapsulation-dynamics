@@ -40,7 +40,6 @@ def initialize_dynamics(H, configuration):
 
     return H
 
-
 def run_simulation(H, configuration):
     T = configuration["steps"]
     # results_dict contains all of the results for this simulation.
@@ -58,12 +57,13 @@ def run_simulation(H, configuration):
     # To speed things up slightly when doing size-biased sampling, I am
     # maintaining three lists in reference to inactive edges:
     # inactive_edges: The actual list of edge IDs
-    inactive_edges = list(H.edges.filterby_attr("active", 0))
+    inactive_edges = np.array(list(H.edges.filterby_attr("active", 0)))
     # _sizes: # of nodes in each edge
-    inactive_edges_sizes = [float(len(H.edges.members(edge_id))) for edge_id in inactive_edges]
+    inactive_edges_sizes = np.array([float(len(H.edges.members(edge_id))) for edge_id in
+                            inactive_edges])
     # _indices: List of indices matching across inactive_edges and _sizes
     # This is the list we will actually sample from.
-    inactive_edges_indices = list(range(0, len(inactive_edges)))
+    inactive_edges_indices = np.array(list(range(0, len(inactive_edges))))
 
     for t in range(1, T+1):
         # Check for saturation
@@ -96,9 +96,9 @@ def run_simulation(H, configuration):
                 # element, then popping the list
                 inactive_edges[edge_index] = inactive_edges[-1]
                 inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
-                inactive_edges.pop()
-                inactive_edges_sizes.pop()
-                inactive_edges_indices.pop()
+                inactive_edges = inactive_edges[:-1]
+                inactive_edges_sizes = inactive_edges_sizes[:-1]
+                inactive_edges_indices = inactive_edges_indices[:-1]
         else:
             H_update = xgi.Hypergraph(H)
             for edge_index in inactive_edges_indices:
@@ -139,6 +139,7 @@ def run_simulation(H, configuration):
 def run_many_simulations(hyperedges, configuration):
     output = dict()
     for i in range(configuration["num_simulations"]):
+        print(f"Running simulation {i}.")
         H = xgi.Hypergraph(incoming_data=hyperedges)
         H = initialize_dynamics(H, configuration)
         H, results = run_simulation(H, configuration)

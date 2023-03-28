@@ -55,9 +55,6 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
 
 
 if __name__ == "__main__":
-    import cProfile
-    pr = cProfile.Profile()
-    pr.enable()
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file", type=str, help="Path to configuration file.")
@@ -113,5 +110,3 @@ if __name__ == "__main__":
                  update_name, results_path, args.ncpus)
 
     print("Done")
-    pr.disable()
-    pr.dump_stats("primary_profile.out")
