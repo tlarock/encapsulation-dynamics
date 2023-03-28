@@ -31,8 +31,13 @@ from plot_simulation_results import *
 def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
                  update_name, results_path, ncpus):
     print(f"Running {selection_name} {update_name}")
-    output_obs = run_many_parallel(hyperedges, configuration, ncpus)
-    output_rnd = run_many_parallel(random_hyperedges, configuration, ncpus)
+    if ncpus > 1:
+        output_obs = run_many_parallel(hyperedges, configuration, ncpus)
+        output_rnd = run_many_parallel(random_hyperedges, configuration, ncpus)
+    else:
+        output_obs = run_many_simulations(hyperedges, configuration)
+        output_rnd = run_many_simulations(random_hyperedges, configuration)
+
 
     fig, axs = plot_cumulative_averages_sizes(configuration, output_obs, output_rnd)
     plot_filename = results_path
@@ -50,6 +55,9 @@ def run_and_plot(hyperedges, random_hyperedges, configuration, selection_name,
 
 
 if __name__ == "__main__":
+    import cProfile
+    pr = cProfile.Profile()
+    pr.enable()
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file", type=str, help="Path to configuration file.")
@@ -105,3 +113,5 @@ if __name__ == "__main__":
                  update_name, results_path, args.ncpus)
 
     print("Done")
+    pr.disable()
+    pr.dump_stats("primary_profile.out")

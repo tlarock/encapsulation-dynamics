@@ -1,9 +1,7 @@
 """
-Define selection functions. For now should only accept the hypergraph,
-but in the future may want to add a dictionary or function for computing
-probabilities from external data (e.g. previous interaction) that may
-not be stored in the hypergraph, or all data about interactions should
-be stored as attributes
+Define selection functions. Functions defined here must accept the hypergraph
+and lists representing the sizes of inactive edges and their indicies to
+compute edge selection probabilities.
 """
 
 import numpy as np
@@ -22,7 +20,7 @@ def uniform_inactive(H, inactive_edges_sizes,
 """
 def biased_inactive(H, inactive_edges_sizes,
                      inactive_edges_indices):
-
+    # ToDo: This is surely an unnecessary allocation
     edge_sizes = np.array(inactive_edges_sizes)
     edge_sizes /= edge_sizes.sum()
     index = np.random.choice(inactive_edges_indices, p=edge_sizes)
@@ -35,6 +33,7 @@ def biased_inactive(H, inactive_edges_sizes,
 """
 def inverse_inactive(H, inactive_edges_sizes,
                      inactive_edges_indices):
+    # ToDo: This is surely an unnecessary allocation
     edge_sizes = 1.0 / np.array(inactive_edges_sizes)
     edge_sizes /= edge_sizes.sum()
     index = np.random.choice(inactive_edges_indices, p=edge_sizes)
