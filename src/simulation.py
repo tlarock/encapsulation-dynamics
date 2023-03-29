@@ -136,10 +136,11 @@ def run_simulation(H, configuration):
     settings in configuration. Returns a dictionary
     with matrices of results for node and edge activation.
 """
-def run_many_simulations(hyperedges, configuration):
+def run_many_simulations(hyperedges, configuration, verbose=False):
     output = dict()
     for i in range(configuration["num_simulations"]):
-        print(f"Running simulation {i}.")
+        if verbose:
+            print(f"Running simulation {i}.")
         H = xgi.Hypergraph(incoming_data=hyperedges)
         H = initialize_dynamics(H, configuration)
         H, results = run_simulation(H, configuration)
