@@ -73,3 +73,39 @@ def random_nested_hypergraph(N, max_size, H, epsilons):
     hyperedges -= to_remove
     hyperedges.update(to_add)
     return list(hyperedges)
+
+
+"""
+    Accepts a list of hyperedges created by random_nested_hypergraph
+    and a dictionary of deletion_probibility for each size s < max.
+    Returns a list of hyperedges where any hyperedge of size s < s_m
+    has been removed with probability deletion_prob[s].
+"""
+def layer_hyperedge_deletion(hyperedges, deletion_probs, rng):
+    max_size = max([len(he) for he in hyperedges])
+    indices_to_remove = set()
+    for idx, he in enumerate(hyperedges):
+        if len(he) < max_size:
+            q = rng.random()
+            if q < deletion_probs[len(he)]:
+                indices_to_remove.add(idx)
+
+    return [he for idx, he in enumerate(hyperedges) if idx not in indices_to_remove]
+
+
+"""
+    Accepts a list of hyperedges created by random_nested_hypergraph
+    and a deletion_probibility. Returns a list of hyperedges where
+    any hyperedge of size smaller than the maximum has been removed
+    with probability deletion_prob.
+"""
+def global_hyperedge_deletion(hyperedges, deletion_prob, rng):
+    max_size = max([len(he) for he in hyperedges])
+    indices_to_remove = set()
+    for idx, he in enumerate(hyperedges):
+        if len(he) < max_size:
+            q = rng.random()
+            if q < deletion_prob:
+                indices_to_remove.add(idx)
+
+    return [he for idx, he in enumerate(hyperedges) if idx not in indices_to_remove]
