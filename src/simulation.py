@@ -41,7 +41,8 @@ def initialize_dynamics(H, configuration):
 
     return H
 
-def run_simulation(H, configuration):
+def run_simulation(hyperedges, configuration):
+    H = initialize_dynamics(xgi.Hypergraph(incoming_data=hyperedges), configuration)
     T = configuration["steps"]
     # results_dict contains all of the results for this simulation.
     # Many results can also be computed from H after a simulation, but
@@ -164,8 +165,7 @@ def run_many_parallel(hyperedges, configuration, ncpus):
     print(f"Running {num_sims} simulations on {ncpus} cpus.")
     args = []
     for i in range(num_sims):
-        args.append((initialize_dynamics(xgi.Hypergraph(incoming_data=hyperedges),
-                                        configuration), configuration))
+        args.append((hyperedges, configuration))
 
     with Pool(ncpus) as p:
         results_list = p.starmap(run_simulation, args)
