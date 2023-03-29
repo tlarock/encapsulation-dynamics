@@ -1,3 +1,4 @@
+from memory_profiler import profile
 import xgi
 import numpy as np
 from multiprocessing import Pool
@@ -157,6 +158,7 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
     on hyperedges using settings in configuration. Returns a dictionary
     with matrices of results for node and edge activation.
 """
+@profile
 def run_many_parallel(hyperedges, configuration, ncpus):
     num_sims = configuration["num_simulations"]
     print(f"Running {num_sims} simulations on {ncpus} cpus.")
