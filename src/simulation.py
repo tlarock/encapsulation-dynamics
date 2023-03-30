@@ -125,9 +125,9 @@ def run_simulation(hyperedges, configuration):
                     # element, then popping the list
                     inactive_edges[edge_index] = inactive_edges[-1]
                     inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
-                    inactive_edges.pop()
-                    inactive_edges_sizes.pop()
-                    inactive_edges_indices.pop()
+                    inactive_edges = inactive_edges[:-1]
+                    inactive_edges_sizes = inactive_edges_sizes[:-1]
+                    inactive_edges_indices = inactive_edges_indices[:-1]
 
                 H = H_update
     return H, results_dict

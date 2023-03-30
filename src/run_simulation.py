@@ -95,6 +95,8 @@ if __name__ == "__main__":
     # Output data
     output_filename = results_path
     output_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
+    if not configuration["single_edge_update"]:
+        output_filename += "_simultaneous"
     output_filename += f"_runs-{configuration['num_simulations']}"
 
     with open(output_filename + ".pickle", "wb") as fpickle:
