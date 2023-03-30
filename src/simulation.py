@@ -2,6 +2,19 @@ import xgi
 import numpy as np
 from multiprocessing import Pool
 
+def activate_edge(H, edge_id, t):
+    H.edges[edge_id]["active"] = 1
+    hyperedge = H.edges.members(edge_id)
+    new_activations = 0
+    for node in hyperedge:
+        # Activate the node if it is not already
+        if H.nodes[node]["active"] == 0:
+            H.nodes[node]["active"] = 1
+            H.nodes[node]["activation_time"] = t
+            H.nodes[node]["activated_by"] = edge_id
+            new_activations += 1
+    return H, new_activations
+
 """ To simulate and track the dynamics, I am going to give each node and hyperedge some attributes:
      active: 0 if inactive, 1 if active
      activation_time: If node is active, time in the dynamics when the node became active. Default -1.
@@ -85,10 +98,11 @@ def run_simulation(hyperedges, configuration):
             edge_active_before = H.edges[edge_id]["active"]
 
             # Run the updae function
-            H, new_activations = configuration["update_function"](H, edge_id, configuration, t)
+            activate = configuration["update_function"](H, edge_id, configuration, t)
 
             # If the edge was activated in this timestep, update the time series
-            if edge_active_before == 0 and H.edges[edge_id]["active"] == 1:
+            if edge_active_before == 0 and activate:
+                H, new_activations = activate_edge(H, edge_id, t)
                 results_dict["edges_activated"][t] = 1.0
                 results_dict["nodes_activated"][t] = new_activations
                 results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
@@ -101,12 +115,9 @@ def run_simulation(hyperedges, configuration):
                 inactive_edges_sizes = inactive_edges_sizes[:-1]
                 inactive_edges_indices = inactive_edges_indices[:-1]
         else:
-            H_update = xgi.Hypergraph(H)
-            num_edges = inactive_edges_indices.shape[0]
-            curr_idx = 0
-            num_checked = 0
-            while num_checked < num_edges:
-                edge_index = inactive_edges_indices[curr_idx]
+            edge_indices_to_delete = []
+            edge_ids_to_activate = []
+            for edge_index in inactive_edges_indices:
                 # Get the edge id in H from the inactive_edges list
                 edge_id = inactive_edges[edge_index]
 
@@ -115,29 +126,29 @@ def run_simulation(hyperedges, configuration):
                 edge_active_before = H.edges[edge_id]["active"]
 
                 # Run the updae function
-                H_update, new_activations = configuration["update_function"](H_update, edge_id, configuration, t)
+                activate = configuration["update_function"](H, edge_id, configuration, t)
 
                 # If the edge was activated in this timestep, update the time series
-                if edge_active_before == 0 and H_update.edges[edge_id]["active"] == 1:
-                    results_dict["edges_activated"][t] += 1.0
-                    results_dict["nodes_activated"][t] += new_activations
-                    # ToDo FixMe: This is wrong for simultaneous update. Need to
-                    # make it list-like.
-                    results_dict["activated_edge_sizes"][t] = float(len(H_update.edges.members(edge_id)))
+                if edge_active_before == 0 and activate:
+                    edge_indices_to_delete.append(edge_index)
+                    edge_ids_to_activate.append(edge_index)
 
-                    # Remove edge from inactive_edges list by swapping with the final
-                    # element, then popping the list
-                    inactive_edges[edge_index] = inactive_edges[-1]
-                    inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
-                    inactive_edges = inactive_edges[:-1]
-                    inactive_edges_sizes = inactive_edges_sizes[:-1]
-                    inactive_edges_indices = inactive_edges_indices[:-1]
-                    # Don't increment if we removed an index
-                    curr_idx -= 1
-                curr_idx += 1
-                num_checked += 1
+            # Actually activate the edges
+            for edge_id in edge_ids_to_activate:
+                H, new_activations = activate_edge(H, edge_id, t)
+                results_dict["edges_activated"][t] += 1.0
+                results_dict["nodes_activated"][t] += new_activations
+                # ToDo FixMe: This is wrong for simultaneous update. Need to
+                # make it list-like.
+                results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
 
-                H = H_update
+            # Remove the relevant indices from the numpy arrays
+            inactive_edges = np.delete(inactive_edges, edge_indices_to_delete)
+            inactive_edges_sizes = np.delete(inactive_edges_sizes, edge_indices_to_delete)
+            # Since we are not swapping and popping as in the single edge case,
+            # just need a sequential range here.
+            inactive_edges_indices = np.arange(inactive_edges.shape[0])
+
     return H, results_dict
 
 """
