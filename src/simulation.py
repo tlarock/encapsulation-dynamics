@@ -102,7 +102,11 @@ def run_simulation(hyperedges, configuration):
                 inactive_edges_indices = inactive_edges_indices[:-1]
         else:
             H_update = xgi.Hypergraph(H)
-            for edge_index in inactive_edges_indices:
+            num_edges = inactive_edges_indices.shape[0]
+            curr_idx = 0
+            num_checked = 0
+            while num_checked < num_edges:
+                edge_index = inactive_edges_indices[curr_idx]
                 # Get the edge id in H from the inactive_edges list
                 edge_id = inactive_edges[edge_index]
 
@@ -128,6 +132,10 @@ def run_simulation(hyperedges, configuration):
                     inactive_edges = inactive_edges[:-1]
                     inactive_edges_sizes = inactive_edges_sizes[:-1]
                     inactive_edges_indices = inactive_edges_indices[:-1]
+                    # Don't increment if we removed an index
+                    curr_idx -= 1
+                curr_idx += 1
+                num_checked += 1
 
                 H = H_update
     return H, results_dict
