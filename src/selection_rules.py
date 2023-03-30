@@ -20,7 +20,6 @@ def uniform_inactive(H, inactive_edges_sizes,
 """
 def biased_inactive(H, inactive_edges_sizes,
                      inactive_edges_indices):
-    # ToDo: This is surely an unnecessary allocation
     edge_sizes = inactive_edges_sizes / inactive_edges_sizes.sum()
     index = np.random.choice(inactive_edges_indices, p=edge_sizes)
     return index
@@ -32,7 +31,6 @@ def biased_inactive(H, inactive_edges_sizes,
 """
 def inverse_inactive(H, inactive_edges_sizes,
                      inactive_edges_indices):
-    # ToDo: This is surely an unnecessary allocation
     edge_sizes = 1.0 / np.array(inactive_edges_sizes)
     edge_sizes /= edge_sizes.sum()
     index = np.random.choice(inactive_edges_indices, p=edge_sizes)
