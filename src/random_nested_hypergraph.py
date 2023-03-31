@@ -2,7 +2,6 @@ import numpy as np
 from itertools import combinations
 from collections import defaultdict
 
-
 """
     Sample a hyperedge of size _size_ from _nodes_ that is not
     already present in the set _hyperedges_
@@ -33,24 +32,28 @@ def rewire_from_pivot(nodeset, pivot, he, hyperedges, facet_nodes, rng):
     size s_m and sub hyperedges (size s < s_m) have been rewired with probability
     1-epsilon.
 """
-def random_nested_hypergraph(N, max_size, H, epsilons):
+def random_nested_hypergraph(N, max_size, H, epsilons, max_size_overlap=-1):
     rng = np.random.default_rng()
     nodes = list(range(N))
     hyperedges = set()
-    max_size_edges = 0
+    facet_nodes = defaultdict(set)
     # For rewiring, we need to keep track of all nodes that
     # are part of a superset of every hyperedge
-    facet_nodes = defaultdict(set)
-    while max_size_edges < H:
-        # Choose a uniform random set that is not already present
-        he = uniform_sample(nodes, max_size, hyperedges, rng)
-        hyperedges.add(he)
-        max_size_edges += 1
-        # add all facets
+    if max_size_overlap < 0:
+        while len(hyperedges) < H:
+            # Choose a uniform random set that is not already present
+            he = uniform_sample(nodes, max_size, hyperedges, rng)
+            hyperedges.add(he)
+    else:
+        hyperedges = set(get_overlapping_hyperedges(N, max_size, H, max_size_overlap))
+
+    # add all facets
+    for he in set(hyperedges):
         for size in range(2, max_size):
             for subset in combinations(he, size):
                 hyperedges.add(subset)
                 facet_nodes[subset].update(he)
+
 
     # Randomly rewire nested hyperedges with probability 1-epsilon
     nodeset = set(nodes)
@@ -109,3 +112,33 @@ def global_hyperedge_deletion(hyperedges, deletion_prob, rng):
                 indices_to_remove.add(idx)
 
     return [he for idx, he in enumerate(hyperedges) if idx not in indices_to_remove]
+
+
+def get_overlapping_hyperedges(N, maximum_size, num_hyperedges, overlap):
+    if overlap == maximum_size:
+        print(f"Overlap and maximum_size should be different, found {overlap}, {maximum_size}.")
+        return []
+    if overlap == 0:
+        hyperedges = [tuple(list(range(i, i+maximum_size))) for i in range(0, N, maximum_size)]
+        while len(hyperedges) > num_hyperedges:
+            hyperedges.pop()
+    else:
+        # Get the nodes
+        nodes = list(range(N))
+        nodeset = set(nodes)
+        # choose a first hyperedge
+        hyperedges = [tuple(sorted(np.random.choice(nodes, maximum_size, replace=False).tolist()))]
+        for _ in range(num_hyperedges-1):
+            # choose two nodes from a previous hyperedge
+            overlap_nodes = np.random.choice(hyperedges[np.random.randint(0, high=len(hyperedges))], overlap, replace=False).tolist()
+            # Choose two random nodes
+            random_nodes = np.random.choice(list(nodeset-set(overlap_nodes)), maximum_size-overlap, replace=False).tolist()
+            hyperedge = tuple(sorted(overlap_nodes + random_nodes))
+            while hyperedge in hyperedges or any([len(set(hyperedge).intersection(set(he))) > overlap for he in hyperedges]):
+                # choose two nodes from a previous hyperedge
+                overlap_nodes = np.random.choice(hyperedges[np.random.randint(0, high=len(hyperedges))], overlap, replace=False).tolist()
+                # Choose two random nodes
+                random_nodes = np.random.choice(list(nodeset-set(overlap_nodes)), maximum_size-overlap, replace=False).tolist()
+                hyperedge = tuple(sorted(overlap_nodes + random_nodes))
+            hyperedges.append(hyperedge)
+    return hyperedges
