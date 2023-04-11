@@ -20,7 +20,7 @@ def activate_edge(H, edge_id, t):
      activation_time: If node is active, time in the dynamics when the node became active. Default -1.
      activated_by (node only): ID of the hyperedge that activated the node. Default -1.
 """
-def initialize_dynamics(H, configuration):
+def initialize_dynamics(rng, H, configuration):
 
     # All nodes are given active status 0 to start
     for node in H.nodes:
@@ -33,7 +33,7 @@ def initialize_dynamics(H, configuration):
     elif "seed_function" in configuration:
         activated_nodes = configuration["seed_function"](H, configuration)
     else:
-        activated_nodes = np.random.choice(H.nodes, configuration["initial_active"])
+        activated_nodes = rng.choice(H.nodes, configuration["initial_active"])
 
     # Change the active status of the seed nodes
     for node in activated_nodes:
@@ -54,7 +54,8 @@ def initialize_dynamics(H, configuration):
     return H
 
 def run_simulation(hyperedges, configuration):
-    H = initialize_dynamics(xgi.Hypergraph(incoming_data=hyperedges), configuration)
+    rng = np.random.default_rng()
+    H = initialize_dynamics(rng, xgi.Hypergraph(incoming_data=hyperedges), configuration)
     T = configuration["steps"]
     # results_dict contains all of the results for this simulation.
     # Many results can also be computed from H after a simulation, but
@@ -86,10 +87,11 @@ def run_simulation(hyperedges, configuration):
 
         if configuration["single_edge_update"]:
             # Choose an edge using selection_function
-            edge_index = configuration["selection_function"](H,
-                                                          inactive_edges_sizes,
-                                                          inactive_edges_indices
-                                                         )
+            edge_index = configuration["selection_function"](rng,
+                                                             H,
+                                                             inactive_edges_sizes,
+                                                             inactive_edges_indices
+                                                            )
             # Get the edge id in H from the inactive_edges list
             edge_id = inactive_edges[edge_index]
 
