@@ -184,7 +184,7 @@ def run_many_parallel(hyperedges, configuration, ncpus):
     for i in range(num_sims):
         args.append((hyperedges, configuration))
 
-    with Pool(ncpus) as p:
+    with Pool(ncpus, initializer=np.random.seed) as p:
         results_list = p.starmap(run_simulation, args)
 
     output = dict()
