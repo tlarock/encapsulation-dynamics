@@ -36,7 +36,8 @@ def plot_cumulative(configuration, results_obs, results_rnd,
     in run_simulations.py.
 """
 def plot_cumulative_averages(configuration, output_obs, output_rnd,
-                    first_label="Observed", second_label="Randomized"):
+                    first_label="Observed", second_label="Randomized",
+                             yscale="linear"):
 
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7,3), squeeze=False)
     fig.subplots_adjust(wspace=0.3)
@@ -53,7 +54,8 @@ def plot_cumulative_averages(configuration, output_obs, output_rnd,
         std = np.std(np.cumsum(output_rnd[key], axis=1), axis=0)
         axs[0][col_idx].plot(x, mean, label=second_label)
         axs[0][col_idx].fill_between(x, mean-std, mean+std, alpha=0.3)
-        axs[0][col_idx].set(xlabel="Time", ylabel=labels[col_idx])
+        axs[0][col_idx].set(xlabel="Time", ylabel=labels[col_idx],
+                            yscale=yscale)
         axs[0][col_idx].legend()
     return fig, axs
 
