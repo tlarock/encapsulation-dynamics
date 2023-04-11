@@ -54,6 +54,7 @@ def initialize_dynamics(H, configuration):
     return H
 
 def run_simulation(hyperedges, configuration):
+    print(np.random.random())
     H = initialize_dynamics(xgi.Hypergraph(incoming_data=hyperedges), configuration)
     T = configuration["steps"]
     # results_dict contains all of the results for this simulation.
