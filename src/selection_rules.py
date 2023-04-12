@@ -16,7 +16,7 @@ def uniform_inactive(rng, H, inactive_edges_sizes,
     Selects an inactive hyperedge at random from H with probability
     proportional to hyperedge size.
 """
-def biased_inactive(H, inactive_edges_sizes,
+def biased_inactive(rng, H, inactive_edges_sizes,
                      inactive_edges_indices):
     edge_sizes = inactive_edges_sizes / inactive_edges_sizes.sum()
     index = rng.choice(inactive_edges_indices, p=edge_sizes)
@@ -27,7 +27,7 @@ def biased_inactive(H, inactive_edges_sizes,
     Selects an inactive hyperedge at random from H with probability
     proportional to inverse of hyperedge size.
 """
-def inverse_inactive(H, inactive_edges_sizes,
+def inverse_inactive(rng, H, inactive_edges_sizes,
                      inactive_edges_indices):
     edge_sizes = 1.0 / np.array(inactive_edges_sizes)
     edge_sizes /= edge_sizes.sum()
