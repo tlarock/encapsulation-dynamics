@@ -76,6 +76,7 @@ def run_simulation(hyperedges, configuration):
     # _sizes: # of nodes in each edge
     inactive_edges_sizes = np.array([float(len(H.edges.members(edge_id))) for edge_id in
                             inactive_edges])
+    sum_of_sizes = inactive_edges_sizes.sum()
     # _indices: List of indices matching across inactive_edges and _sizes
     # This is the list we will actually sample from.
     inactive_edges_indices = np.array(list(range(0, len(inactive_edges))))
@@ -90,6 +91,7 @@ def run_simulation(hyperedges, configuration):
             edge_index = configuration["selection_function"](rng,
                                                              H,
                                                              inactive_edges_sizes,
+                                                             sum_of_sizes,
                                                              inactive_edges_indices
                                                             )
             # Get the edge id in H from the inactive_edges list
@@ -111,6 +113,7 @@ def run_simulation(hyperedges, configuration):
 
                 # Remove edge from inactive_edges list by swapping with the final
                 # element, then popping the list
+                sum_of_sizes -= inactive_edges_sizes[edge_index]
                 inactive_edges[edge_index] = inactive_edges[-1]
                 inactive_edges_sizes[edge_index] = inactive_edges_sizes[-1]
                 inactive_edges = inactive_edges[:-1]
