@@ -74,8 +74,13 @@ def run_simulation(hyperedges, configuration):
     # inactive_edges: The actual list of edge IDs
     inactive_edges = np.array(list(H.edges.filterby_attr("active", 0)))
     # _sizes: # of nodes in each edge
-    inactive_edges_sizes = np.array([float(len(H.edges.members(edge_id))) for edge_id in
+    if configuration["selection_name"] in ["uniform", "biased"]:
+        inactive_edges_sizes = np.array([float(len(H.edges.members(edge_id))) for edge_id in
                             inactive_edges])
+    elif configuration["selection_name"] == "inverse":
+        inactive_edges_sizes = np.array([1.0 / float(len(H.edges.members(edge_id))) for edge_id in
+                            inactive_edges])
+
     sum_of_sizes = inactive_edges_sizes.sum()
     # _indices: List of indices matching across inactive_edges and _sizes
     # This is the list we will actually sample from.
@@ -166,9 +171,7 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
     for i in range(configuration["num_simulations"]):
         if verbose:
             print(f"Running simulation {i}.")
-        H = xgi.Hypergraph(incoming_data=hyperedges)
-        H = initialize_dynamics(H, configuration)
-        H, results = run_simulation(H, configuration)
+        H, results = run_simulation(hyperedges, configuration)
         for key, vals_arr in results.items():
             if key not in output:
                 output[key] = vals_arr

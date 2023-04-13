@@ -35,9 +35,10 @@ def biased_inactive(rng, H, inactive_edges_sizes,
 def inverse_inactive(rng, H, inactive_edges_sizes,
                      sum_of_sizes,
                      inactive_edges_indices):
-    np.reciprocal(inactive_edges_sizes, out=inactive_edges_sizes)
+    # NOTE: Since I moved the handling of inverse calculations
+    # inside of simulation.py, this function is now identical
+    # to biased_inactive.
     inactive_edges_sizes /= sum_of_sizes
     index = rng.choice(inactive_edges_indices, p=inactive_edges_sizes)
     inactive_edges_sizes *= sum_of_sizes
-    np.reciprocal(inactive_edges_sizes, out=inactive_edges_sizes)
     return index
