@@ -4,6 +4,8 @@ and lists representing the sizes of inactive edges and their indicies to
 compute edge selection probabilities.
 """
 
+import numpy as np
+
 """
     Selects an inactive hyperedge uniformly at random from H.
 """
