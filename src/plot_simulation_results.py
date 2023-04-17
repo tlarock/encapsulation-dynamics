@@ -82,13 +82,16 @@ def plot_cumulative_averages(output_obs, output_rnd, num_steps=0,
         )
 
         if max_col < num_steps:
-            shape = (output_obs[key].shape[0], (max_col - sizes_interval))
+            obs_shape = (output_obs[key].shape[0], (max_col - sizes_interval))
+            rnd_shape = (output_rnd[key].shape[0], (max_col - sizes_interval))
         else:
-            shape = (output_obs[key].shape[0], (num_steps - sizes_interval))
+            obs_shape = (output_obs[key].shape[0], (num_steps - sizes_interval))
+            rnd_shape = (output_rnd[key].shape[0], (num_steps - sizes_interval))
 
-        obs_cmean = np.zeros(shape)
-        rnd_cmean = np.zeros(shape)
-        for t in range(sizes_interval, shape[1]):
+
+        obs_cmean = np.zeros(obs_shape)
+        rnd_cmean = np.zeros(rnd_shape)
+        for t in range(sizes_interval, obs_shape[1]):
             # Using "where" to ignore 0s, but NOTE: it returns NaN when all values are 0
             obs_cmean[:, t] = np.mean(output_obs[key][:,t-sizes_interval:t],
                                         where=output_obs[key][:,t-sizes_interval:t]>0,
