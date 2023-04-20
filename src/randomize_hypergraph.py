@@ -21,6 +21,7 @@ parser.add_argument("data_path", type=str, help="Full path to dataset to randomi
 parser.add_argument("num_hypergraphs", type=int, help="Number of randomizations to save.")
 parser.add_argument("steps_per_iteration", type=int, help="Number of Markov chain steps between hypergraphs.")
 parser.add_argument("--multiedges", action='store_true', help="If given, include multiedges. Otherwise compute randomizations of simple graph.")
+parser.add_argument("--first_iter_steps", type=int, default=-1, help="Use a different number of steps for the first iteration before collecting hypergraphs.")
 
 args = parser.parse_args()
 datapath = args.data_path
@@ -31,6 +32,7 @@ datadir = "/".join(datapath.split("/")[0:-1])
 num_hypergraphs = args.num_hypergraphs
 steps_per_iter = args.steps_per_iteration
 multiedges = args.multiedges
+first_iter_steps = args.first_iter_steps
 
 # Read a hypergraph as a list of hyperedges
 L = read_data(datapath, multiedges=multiedges)
@@ -40,7 +42,11 @@ G = hypergraph(L)
 hypergraph_idx = 0
 
 # First randomization
-print("Initial randomization")
+if first_iter_steps > 0:
+    print(f"Running {first_iter_steps} steps as initialization of Markov chain.")
+    G.MH(n_steps = first_iter_steps, label = 'vertex', detailed = True, n_clash = 1)
+
+print(f"Computing {num_hypergraphs} randomizations with {steps_per_iter} steps each.")
 G.MH(n_steps = steps_per_iter, label = 'vertex', detailed = True, n_clash = 1)
 dag_rw, nth_rw, he_map_rw = encapsulation_dag(G.C)
 num_dag_edges = []
@@ -52,6 +58,7 @@ else:
     output_file = datadir + "/randomizations/random-"
 
 # Randomize data
+print(hypergraph_idx)
 write_hypergraph(G.C, output_file + f"{hypergraph_idx}.txt")
 while hypergraph_idx < num_hypergraphs:
     hypergraph_idx += 1
