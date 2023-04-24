@@ -4,6 +4,7 @@
 """
 import argparse
 import sys
+import pickle
 import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
@@ -73,5 +74,9 @@ plt.ylabel("# DAG Edges")
 plt.legend()
 if not multiedges:
     plt.savefig(datadir + f"/randomizations/simple_dag_edge_dist.pdf", dpi=200)
+    with open(datadir + f"/randomizations/simple_dag_edge_dist.pickle", "wb") as fpickle:
+        pickle.dump(num_dag_edges, fpickle)
 else:
     plt.savefig(datadir + f"/randomizations/dag_edge_dist.pdf", dpi=200)
+    with open(datadir + f"/randomizations/dag_edge_dist.pickle", "wb") as fpickle:
+        pickle.dump(num_dag_edges, fpickle)
