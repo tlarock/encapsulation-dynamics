@@ -95,10 +95,13 @@ if __name__ == "__main__":
 
     # Output data
     output_filename = results_path
-    output_filename += f"_{selection_name}_{update_name}-{configuration['active_threshold']}"
+    output_filename += f"_{selection_name}_{update_name}_"
+    output_filename += f"steps-{configuration['steps']}_"
+    output_filename += f"t-{configuration['active_threshold']}_"
+    output_filename += f"ia-{configuration['initial_active']}_"
     if not configuration["single_edge_update"]:
-        output_filename += "_simultaneous"
-    output_filename += f"_runs-{configuration['num_simulations']}"
+        output_filename += "simultaneous_"
+    output_filename += f"runs-{configuration['num_simulations']}"
 
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
