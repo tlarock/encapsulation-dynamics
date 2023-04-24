@@ -35,7 +35,6 @@ last_randomization = args.random_end_num
 
 # Read a hypergraph as a list of hyperedges
 L = read_data(datapath, multiedges=multiedges)
-L = [tuple(he) for he in L]
 if not multiedges:
     input_file = datadir + "/randomizations/random-simple-{}.txt"
 else:
