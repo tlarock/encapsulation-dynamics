@@ -31,10 +31,10 @@ def read_data(path, t_min = None, t_max = None, multiedges=True):
     # format as list of lists
 
     l = np.split(simplices, np.cumsum(nverts))
-    C = [list(c) for c in l if len(c) > 0]
+    C = [tuple(c) for c in l if len(c) > 0]
     if not multiedges:
         C_set = set([tuple(c) for c in C])
-        C = [list(c) for c in C_set]
+        C = [tuple(c) for c in C_set]
 
     return(C)
 
