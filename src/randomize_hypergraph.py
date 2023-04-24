@@ -10,18 +10,29 @@ import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
 from encapsulation_dag import *
-from utils import read_data, write_hypergraph
+from utils import read_data, write_hypergraph, read_random_hyperedges
 sys.path.append("../../hypergraph/")
 from hypergraph import hypergraph
 
 # Get inputs
 # Parse command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("data_path", type=str, help="Full path to dataset to randomize.")
-parser.add_argument("num_hypergraphs", type=int, help="Number of randomizations to save.")
-parser.add_argument("steps_per_iteration", type=int, help="Number of Markov chain steps between hypergraphs.")
-parser.add_argument("--multiedges", action='store_true', help="If given, include multiedges. Otherwise compute randomizations of simple graph.")
-parser.add_argument("--first_iter_steps", type=int, default=-1, help="Use a different number of steps for the first iteration before collecting hypergraphs.")
+parser.add_argument("data_path", type=str,
+                    help="Full path to dataset to randomize.")
+parser.add_argument("num_hypergraphs", type=int,
+                    help="Number of randomizations to save.")
+parser.add_argument("steps_per_iteration", type=int,
+                    help="Number of Markov chain steps between hypergraphs.")
+parser.add_argument("--multiedges", action='store_true',
+                    help="If given, include multiedges. Otherwise compute \
+                    randomizations of simple graph.")
+parser.add_argument("--first_iter_steps", type=int, default=-1,
+                    help="Use a different number of steps for the first \
+                    iteration before collecting hypergraphs.")
+parser.add_argument("--random_start_num", type=int, default=-1,
+                    help="Start from precomputed hypergraph corresponding \
+                    to this randomization number. Hypergraph must be stored in \
+                    appropriate directory.")
 
 args = parser.parse_args()
 datapath = args.data_path
@@ -33,13 +44,23 @@ num_hypergraphs = args.num_hypergraphs
 steps_per_iter = args.steps_per_iteration
 multiedges = args.multiedges
 first_iter_steps = args.first_iter_steps
-
+randomization_num = args.random_start_num
 # Read a hypergraph as a list of hyperedges
-L = read_data(datapath, multiedges=multiedges)
+if randomization_num < 0:
+    L = read_data(datapath, multiedges=multiedges)
+    hypergraph_idx = 0
+else:
+    if not multiedges:
+        input_file = datadir + "/randomizations/random-simple-{}.txt"
+    else:
+        input_file = datadir + "/randomizations/random-{}.txt"
+
+    L = read_random_hyperedges(input_file.format(randomization_num))
+    hypergraph_idx = randomization_num + 1
+    num_hypergraphs += hypergraph_idx
 
 # Construct hypergraph
 G = hypergraph(L)
-hypergraph_idx = 0
 
 # First randomization
 if first_iter_steps > 0:
