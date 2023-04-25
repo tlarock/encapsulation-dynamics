@@ -85,6 +85,7 @@ if __name__ == "__main__":
         "single_edge_update": config[config_key].getboolean("single_edge_update"),
         "selection_name": selection_name,
         "selection_function": SELECTION_FUNCT_MAP[selection_name],
+        "update_name": update_name,
         "update_function": UPDATE_FUNCT_MAP[update_name]
     }
 
