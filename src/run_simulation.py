@@ -22,7 +22,8 @@ from selection_rules import *
 SELECTION_FUNCT_MAP = {
     "uniform": uniform_inactive,
     "biased": biased_inactive,
-    "inverse": inverse_inactive
+    "inverse": inverse_inactive,
+    "simultaneous": None
 }
 
 from simulation import *
@@ -99,8 +100,6 @@ if __name__ == "__main__":
     output_filename += f"steps-{configuration['steps']}_"
     output_filename += f"t-{configuration['active_threshold']}_"
     output_filename += f"ia-{configuration['initial_active']}_"
-    if not configuration["single_edge_update"]:
-        output_filename += "simultaneous_"
     output_filename += f"runs-{configuration['num_simulations']}"
 
     with open(output_filename + ".pickle", "wb") as fpickle:

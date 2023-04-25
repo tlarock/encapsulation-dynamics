@@ -74,7 +74,7 @@ def run_simulation(hyperedges, configuration):
     # inactive_edges: The actual list of edge IDs
     inactive_edges = np.array(list(H.edges.filterby_attr("active", 0)))
     # _sizes: # of nodes in each edge
-    if configuration["selection_name"] in ["uniform", "biased"]:
+    if configuration["selection_name"] in ["uniform", "biased", "simultaneous"]:
         inactive_edges_sizes = np.array([float(len(H.edges.members(edge_id))) for edge_id in
                             inactive_edges])
     elif configuration["selection_name"] == "inverse":
