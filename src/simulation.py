@@ -141,7 +141,7 @@ def run_simulation(hyperedges, configuration):
                     # If up dynamics the threshold is static
                     thresholds = configuration["active_threshold"]
 
-                deleted_edge_ids = set()
+                activated_edge_ids = set()
 
             # Get the indices of hyperedges to activate this step
             edge_indices_to_activate = (activated_node_counts >= thresholds).nonzero()[0]
@@ -150,7 +150,7 @@ def run_simulation(hyperedges, configuration):
             newly_active_nodes = set()
             for edge_index in edge_indices_to_activate:
                 edge_id = inactive_edges[edge_index]
-                deleted_edge_ids.add(edge_id)
+                activated_edge_ids.add(edge_id)
                 H, new_activations = activate_edge(H, edge_id, t)
                 newly_active_nodes.update(new_activations)
                 results_dict["edges_activated"][t] += 1.0
@@ -161,8 +161,8 @@ def run_simulation(hyperedges, configuration):
 
             # Update the activated node counts
             for node in newly_active_nodes:
-                for edge_id in H.nodes.memberships():
-                    if edge_id not in deleted_edge_ids:
+                for edge_id in H.nodes.memberships(node):
+                    if edge_id not in activated_edge_ids:
                         edge_index = np.where(inactive_edges == edge_id)[0][0]
                         activated_node_counts[edge_index] += 1
 
