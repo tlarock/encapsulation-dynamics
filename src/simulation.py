@@ -141,7 +141,7 @@ def run_simulation(hyperedges, configuration):
                 # If the edge was activated in this timestep, update the time series
                 if edge_active_before == 0 and activate:
                     edge_indices_to_delete.append(edge_index)
-                    edge_ids_to_activate.append(edge_index)
+                    edge_ids_to_activate.append(edge_id)
 
             # Actually activate the edges
             for edge_id in edge_ids_to_activate:
