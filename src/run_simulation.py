@@ -41,6 +41,10 @@ if __name__ == "__main__":
     parser.add_argument("--randomization_number", type=int, help="If >=0, will \
                         try to run on that randomization of the dataset.",
                         default=-1, required=False)
+    parser.add_argument("--num_seeds_override", type=int, help="If >=1, overrides \
+                        number of seeds argument in config file.",
+                        default=-1, required=False)
+
     args = parser.parse_args()
     config_file = args.config_file
     config_key = args.config_key
@@ -49,6 +53,7 @@ if __name__ == "__main__":
     ncpus = args.ncpus
     default_key = args.default_key
     randomization_number = args.randomization_number
+    num_seeds_override = args.num_seeds_override
     # Parse configuration file
     config = ConfigParser(os.environ)
     config.read(config_file)
@@ -76,9 +81,14 @@ if __name__ == "__main__":
         hyperedges = read_random_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
         results_path += f"_randomization-{randomization_number}"
 
+    if num_seeds_override >= 1:
+        initial_active = num_seeds_override
+    else:
+        initial_active = config[config_key].getint("initial_active")
+
     # Read configuration parameters
     configuration = {
-        "initial_active": config[config_key].getint("initial_active"),
+        "initial_active": initial_active,
         "steps": config[config_key].getint("steps"),
         "active_threshold": config[config_key].getint("active_threshold"),
         "num_simulations": config[config_key].getint("num_simulations"),
