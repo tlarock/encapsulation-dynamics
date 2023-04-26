@@ -10,7 +10,7 @@ import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
 from encapsulation_dag import *
-from utils import read_data, write_hypergraph, read_random_hyperedges
+from utils import read_data, write_hypergraph, read_hyperedges
 sys.path.append("../../hypergraph/")
 from hypergraph import hypergraph
 
@@ -33,6 +33,8 @@ parser.add_argument("--random_start_num", type=int, default=-1,
                     help="Start from precomputed hypergraph corresponding \
                     to this randomization number. Hypergraph must be stored in \
                     appropriate directory.")
+parser.add_argument("--largest_cc", action="store_true",
+                    help="If true, use dataset/dataset-cc.txt as observed hypergraph.")
 
 args = parser.parse_args()
 datapath = args.data_path
@@ -45,9 +47,15 @@ steps_per_iter = args.steps_per_iteration
 multiedges = args.multiedges
 first_iter_steps = args.first_iter_steps
 randomization_num = args.random_start_num
+largest_cc = args.largest_cc
+
 # Read a hypergraph as a list of hyperedges
 if randomization_num < 0:
-    L = read_data(datapath, multiedges=multiedges)
+    if not largest_cc:
+        L = read_data(datapath, multiedges=multiedges)
+    else:
+        L = read_hyperedges(datapath + "cc.txt")
+
     hypergraph_idx = 0
 else:
     if not multiedges:
@@ -55,7 +63,7 @@ else:
     else:
         input_file = datadir + "/randomizations/random-{}.txt"
 
-    L = read_random_hyperedges(input_file.format(randomization_num))
+    L = read_hyperedges(input_file.format(randomization_num))
     hypergraph_idx = randomization_num + 1
     num_hypergraphs += hypergraph_idx
 
