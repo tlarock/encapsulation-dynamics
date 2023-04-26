@@ -50,7 +50,7 @@ def write_hypergraph(hypergraph, output_file):
                 print(f"Found empty hyperedge. Ignoring.")
     return None
 
-def read_random_hyperedges(filename):
+def read_hyperedges(filename):
     hyperedges = []
     with open(filename, "r") as fin:
         for line in fin:
@@ -79,3 +79,22 @@ def project_hyperedges(hyperedges):
 """
 def check_hyperedges_connectivity(hyperedges):
     return nx.is_connected(project_hyperedges(hyperedges))
+
+
+"""
+    Accepts a list of hyperedges as tuples. Computes the
+    largest connected component of the hypergraph via its
+    projection, then removes any hyperedges that are
+    not connected.
+"""
+def largest_connected_component(hyperedges, remove_single_nodes=False):
+    projection = project_hyperedges(hyperedges)
+    connected_components = sorted(list(nx.connected_components(projection)), key = lambda x: len(x), reverse=True)
+    nodes_to_remove = set([u for c in connected_components[1:] for u in c])
+    connected_component = []
+    for he in hyperedges:
+        if len(set(he).intersection(nodes_to_remove)) == 0:
+            if not remove_single_nodes or len(he) > 1:
+                connected_component.append(he)
+
+    return connected_component

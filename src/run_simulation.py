@@ -9,7 +9,7 @@ from pathlib import Path
 import xgi
 
 import numpy as np
-from utils import read_data, read_random_hyperedges
+from utils import read_data, read_hyperedges
 from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
@@ -65,16 +65,21 @@ if __name__ == "__main__":
 
     results_path += f"{dataset_name}"
 
-    if randomization_number < 0:
-        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
-
-        # Get the list of hyperedges from Austin's format
-        hyperedges = read_data(dataset_path, multiedges=False)
-    else:
+    if randomization_number >= 0:
         # Get the list of randomized hyperedges
         random_path = f"{data_prefix}{dataset_name}/"
-        hyperedges = read_random_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+        hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
         results_path += f"_randomization-{randomization_number}"
+    elif config[config_key]["read_function"] == "read_data":
+        # Get the list of hyperedges from Austin's format
+        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
+        hyperedges = read_data(dataset_path, multiedges=False)
+    elif config[config_key]["read_function"] == "read_hyperedges":
+        # Assume this is largest connected component for coauthorship datasets
+        # and get the list of hyperedges
+        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-cc.txt"
+        hyperedges = read_hyperedges(dataset_path)
+
 
     # Read configuration parameters
     configuration = {
