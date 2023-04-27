@@ -82,7 +82,7 @@ if __name__ == "__main__":
     elif config[config_key]["read_function"] == "read_hyperedges":
         # Assume this is largest connected component for coauthorship datasets
         # and get the list of hyperedges
-        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-cc.txt"
+        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
         hyperedges = read_hyperedges(dataset_path)
 
 
