@@ -9,7 +9,7 @@ from pathlib import Path
 import xgi
 
 import numpy as np
-from utils import read_data, read_hyperedges
+from utils import read_data, read_hyperedges, largest_connected_component
 from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
@@ -44,6 +44,9 @@ if __name__ == "__main__":
     parser.add_argument("--num_seeds_override", type=int, help="If >=1, overrides \
                         number of seeds argument in config file.",
                         default=-1, required=False)
+    parser.add_argument("--largest_cc", action="store_true",
+                        help="If given, compute the largest connected component \
+                        of the hypergraph before running simulations.")
 
     args = parser.parse_args()
     config_file = args.config_file
@@ -54,6 +57,7 @@ if __name__ == "__main__":
     default_key = args.default_key
     randomization_number = args.randomization_number
     num_seeds_override = args.num_seeds_override
+    largest_cc = args.largest_cc
     # Parse configuration file
     config = ConfigParser(os.environ)
     config.read(config_file)
@@ -70,21 +74,23 @@ if __name__ == "__main__":
 
     results_path += f"{dataset_name}"
 
-    if randomization_number >= 0:
-        # Get the list of randomized hyperedges
-        random_path = f"{data_prefix}{dataset_name}/"
-        hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
-        results_path += f"_randomization-{randomization_number}"
+    if config[config_key]["read_function"] == "read_hyperedges":
+        if randomization_number < 0:
+            dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
+            hyperedges = read_hyperedges(dataset_path)
+        else:
+            # Get the list of randomized hyperedges
+            random_path = f"{data_prefix}{dataset_name}/"
+            hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+            results_path += f"_randomization-{randomization_number}"
     elif config[config_key]["read_function"] == "read_data":
         # Get the list of hyperedges from Austin's format
         dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
         hyperedges = read_data(dataset_path, multiedges=False)
-    elif config[config_key]["read_function"] == "read_hyperedges":
-        # Assume this is largest connected component for coauthorship datasets
-        # and get the list of hyperedges
-        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
-        hyperedges = read_hyperedges(dataset_path)
 
+    if largest_cc:
+        print("Computing largest connected component.")
+        hyperedges = largest_connected_component(hyperedges, remove_single_nodes=True)
 
     if num_seeds_override >= 1:
         initial_active = num_seeds_override
