@@ -9,7 +9,7 @@ import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
 from encapsulation_dag import *
-from utils import read_data, read_random_hyperedges
+from utils import read_data, read_hyperedges
 
 # Get inputs
 # Parse command line arguments
@@ -23,6 +23,8 @@ parser.add_argument("--random_start_num", type=int, default=0,
                     help="First random hypergraph to count DAG edges.")
 parser.add_argument("--random_end_num", type=int, default=float("inf"),
                     help="Last random hypergraph to count edges from.")
+parser.add_argument("--read_hyperedges_funct", action="store_true",
+                    help="If given, use read_hyperedges for observed data.")
 
 args = parser.parse_args()
 datapath = args.data_path
@@ -33,9 +35,14 @@ datadir = "/".join(datapath.split("/")[0:-1])
 multiedges = args.multiedges
 first_randomization = args.random_start_num
 last_randomization = args.random_end_num
+read_hyperedges_funct = args.read_hyperedges_funct
 
 # Read a hypergraph as a list of hyperedges
-L = read_data(datapath, multiedges=multiedges)
+if not read_hyperedges_funct:
+    L = read_data(datapath, multiedges=multiedges)
+else:
+    L = read_hyperedges(datapath)
+
 if not multiedges:
     input_file = datadir + "/randomizations/random-simple-{}.txt"
 else:
@@ -58,7 +65,7 @@ hypergraph_idx = first_randomization
 while hypergraph_idx < last_randomization:
     print(hypergraph_idx)
     try:
-        L = read_random_hyperedges(input_file.format(hypergraph_idx))
+        L = read_hyperedges(input_file.format(hypergraph_idx))
     except Exception as e:
         print(e)
         break
@@ -67,8 +74,8 @@ while hypergraph_idx < last_randomization:
     hypergraph_idx += 1
 
 plt.figure()
-plt.scatter([0], [observed_dag_edges], label="Observed")
 plt.plot(list(range(len(num_dag_edges))), num_dag_edges, label="Randomized")
+plt.title(f"Observed DAG edges: {observed_dag_edges}")
 plt.xlabel(f"Steps")
 plt.ylabel("# DAG Edges")
 plt.legend()

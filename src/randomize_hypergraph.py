@@ -67,8 +67,13 @@ else:
     hypergraph_idx = randomization_num + 1
     num_hypergraphs += hypergraph_idx
 
+# DAG edges of observed data
+dag_rw, nth_rw, he_map_rw = encapsulation_dag(L)
+observed_dag_edges = dag_rw.number_of_edges()
+
 # Construct hypergraph
 G = hypergraph(L)
+
 
 # First randomization
 if first_iter_steps > 0:
@@ -100,9 +105,14 @@ while hypergraph_idx < num_hypergraphs:
 
 plt.figure()
 plt.plot(list(range(len(num_dag_edges))), num_dag_edges)
+plt.title(f"Observed DAG edges: {observed_dag_edges}")
 plt.xlabel(f"Steps (in {steps_per_iter})")
 plt.ylabel("# DAG Edges")
 if not multiedges:
     plt.savefig(datadir + f"/randomizations/simple_dag_edge_dist.pdf", dpi=200)
+    with open(datadir + f"/randomizations/simple_dag_edge_dist.pickle", "wb") as fpickle:
+        pickle.dump(num_dag_edges, fpickle)
 else:
     plt.savefig(datadir + f"/randomizations/dag_edge_dist.pdf", dpi=200)
+    with open(datadir + f"/randomizations/dag_edge_dist.pickle", "wb") as fpickle:
+        pickle.dump(num_dag_edges, fpickle)
