@@ -132,7 +132,7 @@ if __name__ == "__main__":
     if biased_seed:
         configuration["seed_function"] = SEED_FUNCT_MAP["biased"]
     elif inverse_biased_seed:
-        configuration["seed_function"] = SEED_FUNCT_MAP["inverse_biased"]
+        configuration["seed_function"] = SEED_FUNCT_MAP["inverse_biased_seed"]
 
     print(f"Running {selection_name} {update_name}")
     if ncpus > 1:
