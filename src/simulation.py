@@ -162,6 +162,8 @@ def run_simulation(hyperedges, configuration):
             # Update the activated node counts
             for node in newly_active_nodes:
                 for edge_id in H.nodes.memberships(node):
+                    # Only update edges that are not about to be
+                    # deleted to avoid wasted computation
                     if edge_id not in activated_edge_ids:
                         edge_index = np.where(inactive_edges == edge_id)[0][0]
                         activated_node_counts[edge_index] += 1
