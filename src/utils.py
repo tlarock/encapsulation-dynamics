@@ -1,3 +1,4 @@
+import pickle
 import networkx as nx
 import numpy as np
 
@@ -98,3 +99,39 @@ def largest_connected_component(hyperedges, remove_single_nodes=False):
                 connected_component.append(he)
 
     return connected_component
+
+
+def read_pickles(results_prefix, selection, update, runs,
+                 random_nums = [0], params_dict = dict()):
+
+
+    obs_file = results_prefix + f"_{selection}_{update}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
+    rnd_template = results_prefix + "_randomization-{}" + f"_{selection}_{update}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
+
+
+
+    obs_file += f"_runs-{runs}"
+    rnd_template += f"_runs-{runs}"
+    if params_dict["biased_seed"]:
+        obs_file += "_biased"
+        rnd_template += "_biased"
+    obs_file += ".pickle"
+    rnd_template += ".pickle"
+    try:
+        with open(obs_file, "rb") as fpickle:
+            output_obs = pickle.load(fpickle)
+    except Exception as e:
+        print("Exception: " + str(e))
+        output_obs = None
+
+    try:
+        if len(random_nums) == 1:
+            with open(rnd_template.format(0), "rb") as fpickle:
+                output_rnd = pickle.load(fpickle)
+        else:
+            output_rnd = aggregate_rand_pickles(rnd_template, random_nums)
+    except Exception as e:
+        print("Exception: " + str(e))
+        output_rnd = None
+
+    return output_obs, output_rnd
