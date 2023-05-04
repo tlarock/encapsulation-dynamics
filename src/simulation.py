@@ -54,7 +54,7 @@ def initialize_dynamics(rng, H, configuration):
 
     return H
 
-def run_simulation(hyperedges, configuration):
+def run_simulation(hyperedges, configuration, results_only=False):
     rng = np.random.default_rng()
     H = initialize_dynamics(rng, xgi.Hypergraph(incoming_data=hyperedges), configuration)
     T = configuration["steps"]
@@ -180,8 +180,11 @@ def run_simulation(hyperedges, configuration):
             # just need a sequential range here.
             inactive_edges_indices = np.arange(inactive_edges.shape[0])
 
-
-    return H, results_dict
+    # This is gross but saves space
+    if results_only:
+        return results_dict
+    else:
+        return H, results_dict
 
 """
     Runs multiple simulations on hyperedges using
@@ -193,7 +196,7 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
     for i in range(configuration["num_simulations"]):
         if verbose:
             print(f"Running simulation {i}.")
-        H, results = run_simulation(hyperedges, configuration)
+        results = run_simulation(hyperedges, configuration, results_only=True)
         for key, vals_arr in results.items():
             if key not in output:
                 output[key] = vals_arr
@@ -212,13 +215,13 @@ def run_many_parallel(hyperedges, configuration, ncpus):
     print(f"Running {num_sims} simulations on {ncpus} cpus.")
     args = []
     for i in range(num_sims):
-        args.append((hyperedges, configuration))
+        args.append((hyperedges, configuration, True))
 
     with Pool(ncpus, initializer=np.random.seed) as p:
         results_list = p.starmap(run_simulation, args)
 
     output = dict()
-    for _, results in results_list:
+    for results in results_list:
         for key, vals_arr in results.items():
             if key not in output:
                 output[key] = vals_arr
