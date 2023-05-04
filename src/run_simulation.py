@@ -30,7 +30,7 @@ from seed_functions import *
 SEED_FUNCT_MAP = {
     "biased": biased_seed,
     "inverse_biased_seed": inverse_biased_seed,
-    "uniform": None,
+    "uniform": "uniform",
     "twonode": twonode_seed
 }
 
