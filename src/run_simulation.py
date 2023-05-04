@@ -125,8 +125,7 @@ if __name__ == "__main__":
 
     print(f"Running simulation with the following parameters:\
             \nHyperedge Selection: {selection_name}\nUpdate Rule: {update_name}\
-            \nSeed Function: {seed_funct}\nNumber of Seeds: {initial_active}\
-            \nThreshold: {active_threshold}")
+            \nSeed Function: {seed_funct}\nNumber of Seeds: {initial_active}")
     if ncpus > 1:
         output = run_many_parallel(hyperedges, configuration, ncpus)
     else:
