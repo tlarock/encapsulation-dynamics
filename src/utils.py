@@ -115,6 +115,10 @@ def read_pickles(results_prefix, selection, update, runs,
     if params_dict["biased_seed"]:
         obs_file += "_biased"
         rnd_template += "_biased"
+    elif params_dict["inverse_biased_seed"]:
+        obs_file += "_inverse-biased"
+        rnd_template += "_inverse-biased"
+
     obs_file += ".pickle"
     rnd_template += ".pickle"
     try:
