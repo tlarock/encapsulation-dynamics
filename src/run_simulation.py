@@ -28,7 +28,7 @@ SELECTION_FUNCT_MAP = {
 
 from seed_functions import *
 SEED_FUNCT_MAP = {
-    "biased": biased_seed,
+    "biased_seed": biased_seed,
     "inverse_biased_seed": inverse_biased_seed,
     "uniform": "uniform",
     "twonode": twonode_seed
