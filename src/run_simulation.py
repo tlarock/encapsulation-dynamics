@@ -29,7 +29,9 @@ SELECTION_FUNCT_MAP = {
 from seed_functions import *
 SEED_FUNCT_MAP = {
     "biased": biased_seed,
-    "inverse_biased_seed": inverse_biased_seed
+    "inverse_biased_seed": inverse_biased_seed,
+    "uniform": None,
+    "twonode": twonode_seed
 }
 
 from simulation import *
@@ -53,10 +55,8 @@ if __name__ == "__main__":
     parser.add_argument("--largest_cc", action="store_true",
                         help="If given, compute the largest connected component \
                         of the hypergraph before running simulations.")
-    parser.add_argument("--biased_seed", action="store_true",
-                        help="If given, use biased seeding function.")
-    parser.add_argument("--inverse_biased_seed", action="store_true",
-                        help="If given, use inverse biased seeding function.")
+    parser.add_argument("--seed_funct", required=False, default="uniform",
+                        help="Name of seed function.")
 
     args = parser.parse_args()
     config_file = args.config_file
@@ -68,14 +68,7 @@ if __name__ == "__main__":
     randomization_number = args.randomization_number
     num_seeds_override = args.num_seeds_override
     largest_cc = args.largest_cc
-    biased_seed = args.biased_seed
-    inverse_biased_seed = args.inverse_biased_seed
-
-    if biased_seed and inverse_biased_seed:
-        print("Can only choose oen of biased or inverse biased \
-                seeding. Exiting.")
-        sys.exit(0)
-        
+    seed_funct = args.seed_funct
 
     # Parse configuration file
     config = ConfigParser(os.environ)
@@ -126,13 +119,9 @@ if __name__ == "__main__":
         "selection_name": selection_name,
         "selection_function": SELECTION_FUNCT_MAP[selection_name],
         "update_name": update_name,
-        "update_function": UPDATE_FUNCT_MAP[update_name]
+        "update_function": UPDATE_FUNCT_MAP[update_name],
+        "seed_function": SEED_FUNCT_MAP[seed_funct]
     }
-
-    if biased_seed:
-        configuration["seed_function"] = SEED_FUNCT_MAP["biased"]
-    elif inverse_biased_seed:
-        configuration["seed_function"] = SEED_FUNCT_MAP["inverse_biased_seed"]
 
     print(f"Running {selection_name} {update_name}")
     if ncpus > 1:
@@ -150,10 +139,12 @@ if __name__ == "__main__":
     output_filename += f"ia-{configuration['initial_active']}_"
     output_filename += f"runs-{configuration['num_simulations']}"
 
-    if biased_seed:
+    if seed_funct == "biased_seed":
         output_filename += "_biased"
-    elif inverse_biased_seed:
+    elif seed_funct == "inverse_biased_seed":
         output_filename += "_inverse-biased"
+    elif seed_funct == "twonode":
+        output_filename += "_twonode"
 
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)

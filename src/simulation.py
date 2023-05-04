@@ -30,10 +30,11 @@ def initialize_dynamics(rng, H, configuration):
     if "seed_activated" in configuration and \
        len(configuration["seed_activated"]) == configuration["initial_active"]:
         activated_nodes = configuration["seed_activated"]
-    elif "seed_function" in configuration:
-        activated_nodes = configuration["seed_function"](H, configuration)
-    else:
+    elif "seed_function" in configuration and configuration["seed_function"] == "uniform":
         activated_nodes = rng.choice(H.nodes, configuration["initial_active"])
+    else:
+        # Use the input function
+        activated_nodes = configuration["seed_function"](H, configuration)
 
     # Change the active status of the seed nodes
     for node in activated_nodes:

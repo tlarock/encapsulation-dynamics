@@ -101,17 +101,26 @@ def largest_connected_component(hyperedges, remove_single_nodes=False):
     return connected_component
 
 
-def read_pickles(results_prefix, selection, update, runs,
-                 random_nums = [0], params_dict = dict()):
+"""
+    Accepts results prefix of the form path/to/results/dataset/dataset and a
+    dictionary of parameters, then reads the pickle file associated with that
+    simulation if it exists.
+
+    If given, can combine multiple random hypergraphs by giving a list of
+    random_nums. By default uses results on hypergraph 0.
+"""
+def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
 
 
-    obs_file = results_prefix + f"_{selection}_{update}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
-    rnd_template = results_prefix + "_randomization-{}" + f"_{selection}_{update}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
+    obs_file = results_prefix + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
+    rnd_template = results_prefix + "_randomization-{}" + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
 
 
 
-    obs_file += f"_runs-{runs}"
-    rnd_template += f"_runs-{runs}"
+    obs_file += f"_runs-{params_dict['runs']}"
+    rnd_template += f"_runs-{params_dict['runs']}"
+
+    # Check for seed function parameter
     if params_dict["biased_seed"]:
         obs_file += "_biased"
         rnd_template += "_biased"
