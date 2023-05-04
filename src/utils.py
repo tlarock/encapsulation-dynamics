@@ -127,6 +127,9 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
     elif params_dict["inverse_biased_seed"]:
         obs_file += "_inverse-biased"
         rnd_template += "_inverse-biased"
+    elif params_dict["twonode_seed"]:
+        obs_file += "_twonode"
+        rnd_template += "_twonode"
 
     obs_file += ".pickle"
     rnd_template += ".pickle"
