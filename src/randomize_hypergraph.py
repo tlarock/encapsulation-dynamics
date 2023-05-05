@@ -5,6 +5,7 @@
     for Markov chain convergence.
 """
 import argparse
+import pickle
 import sys
 import networkx as nx
 import numpy as np
@@ -35,6 +36,8 @@ parser.add_argument("--random_start_num", type=int, default=-1,
                     appropriate directory.")
 parser.add_argument("--largest_cc", action="store_true",
                     help="If true, use dataset/dataset-cc.txt as observed hypergraph.")
+parser.add_argument("--read_hyperedges", action="store_true",
+                    help="If true, use read_hyperedges function to read data.")
 
 args = parser.parse_args()
 datapath = args.data_path
@@ -48,13 +51,16 @@ multiedges = args.multiedges
 first_iter_steps = args.first_iter_steps
 randomization_num = args.random_start_num
 largest_cc = args.largest_cc
+read_hyperedges_funct = args.read_hyperedges
 
 # Read a hypergraph as a list of hyperedges
 if randomization_num < 0:
-    if not largest_cc:
+    if not largest_cc and not read_hyperedges_funct:
         L = read_data(datapath, multiedges=multiedges)
-    else:
+    elif largest_cc:
         L = read_hyperedges(datapath + "cc.txt")
+    elif read_hyperedges_funct:
+        L = read_hyperedges(datapath)
 
     hypergraph_idx = 0
 else:

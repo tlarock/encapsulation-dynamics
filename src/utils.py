@@ -131,11 +131,11 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
         obs_file += "_twonode"
         rnd_template += "_twonode"
     elif params_dict["degree_biased"]:
-        obs_file += "degree_biased"
-        rnd_template += "degree_biased"
+        obs_file += "_degree_biased"
+        rnd_template += "_degree_biased"
     elif params_dict["inverse_degree"]:
-        obs_file += "inverse_degree"
-        rnd_template += "inverse_degree"
+        obs_file += "_inverse_degree"
+        rnd_template += "_inverse_degree"
 
     obs_file += ".pickle"
     rnd_template += ".pickle"
@@ -157,3 +157,16 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
         output_rnd = None
 
     return output_obs, output_rnd
+
+
+def aggregate_rand_pickles(template, random_nums):
+    output_rnd = dict()
+    for rnd in random_nums:
+        with open(template.format(rnd), "rb") as fpickle:
+            output = pickle.load(fpickle)
+        for key in output:
+            if key not in output_rnd:
+                output_rnd[key] = output[key]
+            else:
+                output_rnd[key] = np.vstack((output_rnd[key], output[key]))
+    return output_rnd
