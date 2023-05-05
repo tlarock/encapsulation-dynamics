@@ -37,7 +37,7 @@ def plot_cumulative(configuration, results_obs, results_rnd,
 """
 def plot_cumulative_averages(output_obs, output_rnd, num_steps=0,
                     first_label="Observed", second_label="Randomized",
-                    normalized=False, yscale="linear",
+                    normalized=False, norm_type="total", yscale="linear",
                     sizes=False, sizes_interval=100):
 
     # Plo setup
@@ -57,10 +57,13 @@ def plot_cumulative_averages(output_obs, output_rnd, num_steps=0,
     labels = ["Cumulative Nodes Activated", "Cumulative Edges Activated"]
     for col_idx, key in enumerate(["nodes_activated", "edges_activated"]):
         obs = output_obs[key][:, 0:num_steps]
-        if normalized and key == "edges_activated":
-            obs /= output_obs["total_edges"]
-        elif normalized and key == "nodes_activated":
-            obs /= output_obs["total_nodes"]
+        if normalized and norm_type == "total":
+            if key == "edges_activated":
+                obs /= output_obs["total_edges"]
+            elif key == "nodes_activated":
+                obs /= output_obs["total_nodes"]
+        elif normalized and norm_type == "max":
+            obs /= np.max(obs.cumsum(axis=1))
 
         mean = np.mean(np.cumsum(obs, axis=1), axis=0)
         std = np.std(np.cumsum(obs, axis=1), axis=0)
@@ -68,10 +71,14 @@ def plot_cumulative_averages(output_obs, output_rnd, num_steps=0,
         axs[0][col_idx].fill_between(x, mean-std, mean+std, alpha=0.3)
 
         rnd = output_rnd[key][:, 0:num_steps]
-        if normalized and key == "edges_activated":
-            rnd /= output_rnd["total_edges"]
-        elif normalized and key == "nodes_activated":
-            rnd /= output_rnd["total_nodes"]
+        if normalized and norm_type == "total":
+            if key == "edges_activated":
+                rnd /= output_rnd["total_edges"]
+            elif key == "nodes_activated":
+                rnd /= output_rnd["total_nodes"]
+        elif normalized and norm_type == "max":
+            rnd /= np.max(rnd.cumsum(axis=1))
+
 
         mean = np.mean(np.cumsum(rnd, axis=1), axis=0)
         std = np.std(np.cumsum(rnd, axis=1), axis=0)
