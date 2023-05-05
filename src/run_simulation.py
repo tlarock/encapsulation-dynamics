@@ -31,7 +31,9 @@ SEED_FUNCT_MAP = {
     "biased_seed": biased_seed,
     "inverse_biased_seed": inverse_biased_seed,
     "uniform": "uniform",
-    "twonode": twonode_seed
+    "twonode": twonode_seed,
+    "degree_biased": degree_biased_seed,
+    "inverse_degree": inverse_degree_biased
 }
 
 from simulation import *
@@ -56,6 +58,7 @@ if __name__ == "__main__":
                         help="If given, compute the largest connected component \
                         of the hypergraph before running simulations.")
     parser.add_argument("--seed_funct", required=False, default="uniform",
+                        choices=set(SEED_FUNCT_MAP.keys()),
                         help="Name of seed function.")
 
     args = parser.parse_args()
@@ -147,6 +150,8 @@ if __name__ == "__main__":
         output_filename += "_inverse-biased"
     elif seed_funct == "twonode":
         output_filename += "_twonode"
+    elif "deg" in seed_funct:
+        output_filename += "_" + seed_funct
 
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
