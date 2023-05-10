@@ -170,3 +170,6 @@ def aggregate_rand_pickles(template, random_nums):
             else:
                 output_rnd[key] = np.vstack((output_rnd[key], output[key]))
     return output_rnd
+
+def drop_hyperedges_by_size(hyperedges, drop_size):
+    return [he for he in hyperedges if len(he) != drop_size]

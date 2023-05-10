@@ -147,6 +147,10 @@ def run_simulation(hyperedges, configuration, results_only=False):
             # Get the indices of hyperedges to activate this step
             edge_indices_to_activate = (activated_node_counts >= thresholds).nonzero()[0]
 
+            if edge_indices_to_activate.shape[0] == 0:
+                # If no edges will be activated, the simulation can stop
+                break
+
             # Activate the edges
             newly_active_nodes = set()
             for edge_index in edge_indices_to_activate:

@@ -9,7 +9,7 @@ from pathlib import Path
 import xgi
 
 import numpy as np
-from utils import read_data, read_hyperedges, largest_connected_component
+from utils import read_data, read_hyperedges, largest_connected_component, drop_hyperedges_by_size
 from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
@@ -60,6 +60,8 @@ if __name__ == "__main__":
     parser.add_argument("--seed_funct", required=False, default="uniform",
                         choices=set(SEED_FUNCT_MAP.keys()),
                         help="Name of seed function.")
+    parser.add_argument("--drop_hyperedges_size", required=False, default=-1, type=int,
+                        help="Given a size, drop all hyperedges of that size.")
 
     args = parser.parse_args()
     config_file = args.config_file
@@ -72,6 +74,7 @@ if __name__ == "__main__":
     num_seeds_override = args.num_seeds_override
     largest_cc = args.largest_cc
     seed_funct = args.seed_funct
+    drop_size = args.drop_hyperedges_size
 
     # Parse configuration file
     config = ConfigParser(os.environ)
@@ -102,6 +105,10 @@ if __name__ == "__main__":
         # Get the list of hyperedges from Austin's format
         dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
         hyperedges = read_data(dataset_path, multiedges=False)
+
+    if drop_size > 0:
+        print(f"Dropping hyperedges of size {drop_size}")
+        hyperedges = drop_hyperedges_by_size(hyperedges, drop_size)
 
     if largest_cc:
         print("Computing largest connected component.")
@@ -152,6 +159,9 @@ if __name__ == "__main__":
         output_filename += "_twonode"
     elif "deg" in seed_funct:
         output_filename += "_" + seed_funct
+
+    if drop_size > 0:
+        output_filename += f"_drop_size-{drop_size}"
 
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
