@@ -121,21 +121,13 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
     rnd_template += f"_runs-{params_dict['runs']}"
 
     # Check for seed function parameter
-    if params_dict["biased_seed"]:
-        obs_file += "_biased"
-        rnd_template += "_biased"
-    elif params_dict["inverse_biased_seed"]:
-        obs_file += "_inverse-biased"
-        rnd_template += "_inverse-biased"
-    elif params_dict["twonode_seed"]:
-        obs_file += "_twonode"
-        rnd_template += "_twonode"
-    elif params_dict["degree_biased"]:
-        obs_file += "_degree_biased"
-        rnd_template += "_degree_biased"
-    elif params_dict["inverse_degree"]:
-        obs_file += "_inverse_degree"
-        rnd_template += "_inverse_degree"
+    if "seed_funct" in params_dict and params_dict["seed_funct"]:
+        obs_file += "_" + params_dict["seed_funct"]
+        rnd_template += "_" + params_dict["seed_funct"]
+
+    if params_dict["drop_size"]:
+        obs_file += f"_drop_size-{params_dict['drop_size']}"
+        rnd_template += f"_drop_size-{params_dict['drop_size']}"
 
     obs_file += ".pickle"
     rnd_template += ".pickle"
