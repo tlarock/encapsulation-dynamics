@@ -125,7 +125,7 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
         obs_file += "_" + params_dict["seed_funct"]
         rnd_template += "_" + params_dict["seed_funct"]
 
-    if params_dict["drop_size"]:
+    if "drop_size" in params_dict and params_dict["drop_size"]:
         obs_file += f"_drop_size-{params_dict['drop_size']}"
         rnd_template += f"_drop_size-{params_dict['drop_size']}"
 
