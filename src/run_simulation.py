@@ -9,7 +9,7 @@ from pathlib import Path
 import xgi
 
 import numpy as np
-from utils import read_data, read_hyperedges, largest_connected_component, drop_hyperedges_by_size
+from utils import read_data, read_hyperedges, largest_connected_component, drop_hyperedges_by_size, check_hyperedges_connectivity
 from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
@@ -111,8 +111,11 @@ if __name__ == "__main__":
         hyperedges = drop_hyperedges_by_size(hyperedges, drop_size)
 
     if largest_cc:
-        print("Computing largest connected component.")
-        hyperedges = largest_connected_component(hyperedges, remove_single_nodes=True)
+        if not check_hyperedges_connectivity(hyperedges):
+            print("Computing largest connected component.")
+            hyperedges = largest_connected_component(hyperedges, remove_single_nodes=True)
+        else:
+            print("Hyperedges already connected. Not computing largest component.")
 
     if num_seeds_override >= 1:
         initial_active = num_seeds_override
@@ -136,6 +139,7 @@ if __name__ == "__main__":
     print(f"Running simulation with the following parameters:\
             \nHyperedge Selection: {selection_name}\nUpdate Rule: {update_name}\
             \nSeed Function: {seed_funct}\nNumber of Seeds: {initial_active}")
+
     if ncpus > 1:
         output = run_many_parallel(hyperedges, configuration, ncpus)
     else:
