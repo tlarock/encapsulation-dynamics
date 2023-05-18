@@ -64,3 +64,17 @@ def inverse_degree_biased(H, configuration):
     Randomly choose num_seeds edges with probability proportional to the
     size of the edge.
 """
+def size_biased_seed(H, configuration, inverse=False):
+    num_seeds = configuration["initial_active"]
+    p = np.array([float(len(H.edges.members(edge_id))) for edge_id in H.edges])
+    if inverse:
+        p = 1.0 / p
+    p /= p.sum()
+    activated_edges_arr = np.random.choice(list(H.edges), p=p, replace=False, size=num_seeds)
+    return activated_edges_arr.tolist()
+
+"""
+    Wrapper for inverse of hyperedge size.
+"""
+def inverse_size_biased(H, configuration):
+    return size_biased_seed(H, configuration, inverse=True)

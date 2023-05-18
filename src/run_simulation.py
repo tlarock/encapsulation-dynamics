@@ -33,7 +33,9 @@ SEED_FUNCT_MAP = {
     "uniform": "uniform",
     "twonode": twonode_seed,
     "degree_biased": degree_biased_seed,
-    "inverse_degree": inverse_degree_biased
+    "inverse_degree": inverse_degree_biased,
+    "size_biased": size_biased_seed,
+    "inverse_size": inverse_size_biased
 }
 
 from simulation import *
@@ -180,7 +182,7 @@ if __name__ == "__main__":
         output_filename += "_inverse-biased"
     elif seed_funct == "twonode":
         output_filename += "_twonode"
-    elif "deg" in seed_funct:
+    elif "deg" in seed_funct or "size" in seed_funct:
         output_filename += "_" + seed_funct
 
     if drop_size > 0:
