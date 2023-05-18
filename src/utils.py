@@ -51,6 +51,10 @@ def write_hypergraph(hypergraph, output_file):
                 print(f"Found empty hyperedge. Ignoring.")
     return None
 
+"""
+    Read a list of hyperedges, one per line with nodes
+    separated by commas, from filename.
+"""
 def read_hyperedges(filename):
     hyperedges = []
     with open(filename, "r") as fin:
@@ -119,6 +123,10 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
 
     obs_file += f"_runs-{params_dict['runs']}"
     rnd_template += f"_runs-{params_dict['runs']}"
+
+    if "seeding_strategy" in params_dict:
+        obs_file += f"_{params_dict['seeding_strategy']}"
+        rnd_template += f"_{params_dict['seeding_strategy']}"
 
     # Check for seed function parameter
     if "seed_funct" in params_dict and params_dict["seed_funct"]:
