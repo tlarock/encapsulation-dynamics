@@ -93,6 +93,7 @@ def run_simulation(hyperedges, configuration, results_only=False):
 
     # Store the number of initially active nodes
     results_dict["nodes_activated"][0] = len(list(H.nodes.filterby_attr("active", 1)))
+    results_dict["edges_activated"][0] = len(list(H.edges.filterby_attr("active", 1)))
 
     # To speed things up slightly when doing size-biased sampling, I am
     # maintaining three lists in reference to inactive edges:
