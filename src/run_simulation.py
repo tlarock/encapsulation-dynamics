@@ -39,14 +39,16 @@ SEED_FUNCT_MAP = {
 from simulation import *
 from plot_simulation_results import *
 
-if __name__ == "__main__":
-    # Parse command line arguments
+
+def parse_command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file", type=str, help="Path to configuration file.")
     parser.add_argument("config_key", type=str, help="Key in config file. Usualy dataset name.")
     parser.add_argument("selection_funct", type=str, help="Name of selection function to use.")
     parser.add_argument("update_funct", type=str, help="Name of update function to use.")
     parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
+    parser.add_argument("--seeding_strategy", type=str, required=False, choices=["node", "edge"], default="node",
+                        help="Seeding strategy to use. Default is node seeding.")
     parser.add_argument("--default_key", type=str, help="Default key for config file.", default="default-arc", required=False)
     parser.add_argument("--randomization_number", type=int, help="If >=0, will \
                         try to run on that randomization of the dataset.",
@@ -64,11 +66,35 @@ if __name__ == "__main__":
                         help="Given a size, drop all hyperedges of that size.")
 
     args = parser.parse_args()
+    return args
+
+
+def read_input(config, config_key, data_prefix, dataset_name,
+              randomization_number, results_path):
+    if config[config_key]["read_function"] == "read_hyperedges":
+        if randomization_number < 0:
+            dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
+            hyperedges = read_hyperedges(dataset_path)
+        else:
+            # Get the list of randomized hyperedges
+            random_path = f"{data_prefix}{dataset_name}/"
+            hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+            results_path += f"_randomization-{randomization_number}"
+    elif config[config_key]["read_function"] == "read_data":
+        # Get the list of hyperedges from Austin's format
+        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
+        hyperedges = read_data(dataset_path, multiedges=False)
+    return hyperedges, results_path
+
+if __name__ == "__main__":
+    # Parse command line arguments
+    args = parse_command_line()
     config_file = args.config_file
     config_key = args.config_key
     selection_name = args.selection_funct
     update_name = args.update_funct
     ncpus = args.ncpus
+    seeding_strategy = args.seeding_strategy
     default_key = args.default_key
     randomization_number = args.randomization_number
     num_seeds_override = args.num_seeds_override
@@ -92,20 +118,9 @@ if __name__ == "__main__":
 
     results_path += f"{dataset_name}"
 
-    if config[config_key]["read_function"] == "read_hyperedges":
-        if randomization_number < 0:
-            dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
-            hyperedges = read_hyperedges(dataset_path)
-        else:
-            # Get the list of randomized hyperedges
-            random_path = f"{data_prefix}{dataset_name}/"
-            hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
-            results_path += f"_randomization-{randomization_number}"
-    elif config[config_key]["read_function"] == "read_data":
-        # Get the list of hyperedges from Austin's format
-        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
-        hyperedges = read_data(dataset_path, multiedges=False)
-
+    hyperedges, results_path = read_input(config, config_key, data_prefix,
+                                         dataset_name, randomization_number,
+                                         results_path)
     if drop_size > 0:
         print(f"Dropping hyperedges of size {drop_size}")
         hyperedges = drop_hyperedges_by_size(hyperedges, drop_size)
@@ -128,17 +143,19 @@ if __name__ == "__main__":
         "steps": config[config_key].getint("steps"),
         "active_threshold": config[config_key].getint("active_threshold"),
         "num_simulations": config[config_key].getint("num_simulations"),
-        "single_edge_update": config[config_key].getboolean("single_edge_update"),
+        #"single_edge_update": config[config_key].getboolean("single_edge_update"),
         "selection_name": selection_name,
         "selection_function": SELECTION_FUNCT_MAP[selection_name],
         "update_name": update_name,
         "update_function": UPDATE_FUNCT_MAP[update_name],
+        "seeding_strategy": seeding_strategy,
         "seed_function": SEED_FUNCT_MAP[seed_funct]
     }
 
     print(f"Running simulation with the following parameters:\
             \nHyperedge Selection: {selection_name}\nUpdate Rule: {update_name}\
-            \nSeed Function: {seed_funct}\nNumber of Seeds: {initial_active}")
+          \nSeed strategy: {seeding_strategy}\nSeed Function: {seed_funct}\nNumber of Seeds:\
+          {initial_active}\nThreshold: {configuration['active_threshold']}")
 
     if ncpus > 1:
         output = run_many_parallel(hyperedges, configuration, ncpus)
@@ -153,8 +170,10 @@ if __name__ == "__main__":
     output_filename += f"steps-{configuration['steps']}_"
     output_filename += f"t-{configuration['active_threshold']}_"
     output_filename += f"ia-{configuration['initial_active']}_"
-    output_filename += f"runs-{configuration['num_simulations']}"
+    output_filename += f"runs-{configuration['num_simulations']}_"
+    output_filename += seeding_strategy
 
+    # ToDo: This naming might be more complicated than necessary?
     if seed_funct == "biased_seed":
         output_filename += "_biased"
     elif seed_funct == "inverse_biased_seed":

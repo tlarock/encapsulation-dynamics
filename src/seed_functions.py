@@ -1,7 +1,9 @@
 import numpy as np
 
+
+### FUNCTIONS FOR NODE SEEDS ###
 """
-    Randomly choose num_seeds from all nodes participating
+    Randomly choose num_seeds nodes from all nodes participating
     in 2-node edges.
 """
 def twonode_seed(H, configuration):
@@ -11,6 +13,11 @@ def twonode_seed(H, configuration):
                              if len(H.edges.members(eid)) == 2])), replace=False, size = num_seeds)
     return activated_nodes_arr.tolist()
 
+
+"""
+    Randomly choose num_seeds nodes with probability proportional to the
+    average size of the hyperedges the node participates in.
+"""
 def biased_seed(H, configuration, inverse=False):
     num_seeds = configuration["initial_active"]
     p = []
@@ -25,9 +32,18 @@ def biased_seed(H, configuration, inverse=False):
     activated_nodes_arr = np.random.choice(list(H.nodes), p=p, replace=False, size=num_seeds)
     return activated_nodes_arr.tolist()
 
+"""
+    Wrapper for inverse of the average hyperedge size bias.
+"""
 def inverse_biased_seed(H, configuration):
     return biased_seed(H, configuration, inverse=True)
 
+
+"""
+    Randomly choose num_seeds nodes with probability proportional to
+    the hyperdegree of the node (number of hyperedges the node
+    participates in).
+"""
 def degree_biased_seed(H, configuration, inverse=False):
     num_seeds = configuration["initial_active"]
     p = np.array([float(H.nodes.degree[node]) for node in H.nodes])
@@ -37,5 +53,14 @@ def degree_biased_seed(H, configuration, inverse=False):
     activated_nodes_arr = np.random.choice(list(H.nodes), p=p, replace=False, size=num_seeds)
     return activated_nodes_arr.tolist()
 
+"""
+    Wrapper for inverse of the hyperdegree.
+"""
 def inverse_degree_biased(H, configuration):
     return degree_biased_seed(H, configuration, inverse=True)
+
+### FUNCTIONS FOR EDGE SEEDS ###
+"""
+    Randomly choose num_seeds edges with probability proportional to the
+    size of the edge.
+"""

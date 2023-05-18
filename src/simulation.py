@@ -26,30 +26,54 @@ def initialize_dynamics(rng, H, configuration):
     for node in H.nodes:
         H.add_node(node, active = 0, activation_time = -1, activated_by = -1)
 
-    # Seed nodes can either be predetermined, chosen by a function, or chosen at random
-    if "seed_activated" in configuration and \
-       len(configuration["seed_activated"]) == configuration["initial_active"]:
-        activated_nodes = configuration["seed_activated"]
-    elif "seed_function" in configuration and configuration["seed_function"] == "uniform":
-        activated_nodes = rng.choice(H.nodes, configuration["initial_active"])
-    else:
-        # Use the input function
-        activated_nodes = configuration["seed_function"](H, configuration)
+    if configuration["seeding_strategy"] == "node":
+        # Seed nodes can either be predetermined, chosen by a function, or chosen at random
+        if "seed_activated" in configuration and \
+           len(configuration["seed_activated"]) == configuration["initial_active"]:
+            activated_nodes = configuration["seed_activated"]
+        elif "seed_function" in configuration and configuration["seed_function"] == "uniform":
+            activated_nodes = rng.choice(H.nodes, configuration["initial_active"])
+        else:
+            # Use the input function
+            activated_nodes = configuration["seed_function"](H, configuration)
 
-    # Change the active status of the seed nodes
-    for node in activated_nodes:
-        H.nodes[node]["active"] = 1
-        H.nodes[node]["activation_time"] = 0
-        # Arbitrary value to indicate which nodes are seeds
-        H.nodes[node]["activated_by"] = -10
+        # Change the active status of the seed nodes
+        for node in activated_nodes:
+            H.nodes[node]["active"] = 1
+            H.nodes[node]["activation_time"] = 0
+            # Arbitrary value to indicate which nodes are seeds
+            H.nodes[node]["activated_by"] = -10
 
-    # All edges are initially inactive
-    edge_attribute_dict = dict()
-    for edge_id in H.edges:
-        edge_attribute_dict[edge_id] = {
-            "active": 0,
-            "activation_time":0
-        }
+        # All edges are initially inactive
+        edge_attribute_dict = dict()
+        for edge_id in H.edges:
+            edge_attribute_dict[edge_id] = {
+                "active": 0,
+                "activation_time":0
+            }
+    elif configuration["seeding_strategy"] == "edge":
+        if "seed_function" in configuration and configuration["seed_function"] == "uniform":
+            activated_edges = rng.choice(H.edges, configuration["initial_active"])
+        else:
+            # Use the input function
+            activated_edges = configuration["seed_function"](H, configuration)
+
+        # construct edge attributes
+        edge_attribute_dict = dict()
+        for edge_id in H.edges:
+            # Initialize entry
+            edge_attribute_dict[edge_id] = {
+                "active": 0,
+                "activation_time":0
+            }
+            # If the edge id was chosen as a seed, activate it
+            if edge_id in activated_edges:
+                edge_attribute_dict[edge_id]["active"] = 1
+                for node in H.edges.members(edge_id):
+                    H.nodes[node]["active"] = 1
+                    H.nodes[node]["activated_by"] = edge_id
+
+    # Set the edge attributes
     xgi.set_edge_attributes(H, values=edge_attribute_dict)
 
     return H
@@ -92,7 +116,7 @@ def run_simulation(hyperedges, configuration, results_only=False):
         if len(inactive_edges) == 0:
             break
 
-        if configuration["single_edge_update"]:
+        if configuration["selection_name"] != "simultaneous":
             # Choose an edge using selection_function
             edge_index = configuration["selection_function"](rng,
                                                              H,
