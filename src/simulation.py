@@ -35,7 +35,7 @@ def initialize_dynamics(rng, H, configuration):
             activated_nodes = rng.choice(H.nodes, configuration["initial_active"])
         else:
             # Use the input function
-            activated_nodes = configuration["seed_function"](H, configuration)
+            activated_nodes = configuration["seed_function"](rng, H, configuration)
 
         # Change the active status of the seed nodes
         for node in activated_nodes:
@@ -56,7 +56,7 @@ def initialize_dynamics(rng, H, configuration):
             activated_edges = rng.choice(H.edges, configuration["initial_active"])
         else:
             # Use the input function
-            activated_edges = configuration["seed_function"](H, configuration)
+            activated_edges = configuration["seed_function"](rng, H, configuration)
 
         # construct edge attributes
         edge_attribute_dict = dict()
