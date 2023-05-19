@@ -10,6 +10,8 @@ import xgi
 
 import numpy as np
 from utils import read_data, read_hyperedges, largest_connected_component, drop_hyperedges_by_size, check_hyperedges_connectivity
+from layer_randomization import layer_randomization
+
 from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
@@ -66,13 +68,15 @@ def parse_command_line():
                         help="Name of seed function.")
     parser.add_argument("--drop_hyperedges_size", required=False, default=-1, type=int,
                         help="Given a size, drop all hyperedges of that size.")
+    parser.add_argument("--layer_randomization", required=False,
+                        action="store_true", help="If given, apply layer randomization to the dataset.")
 
     args = parser.parse_args()
     return args
 
 
 def read_input(config, config_key, data_prefix, dataset_name,
-              randomization_number, results_path):
+              randomization_number, results_path, _layer_randomization):
     if config[config_key]["read_function"] == "read_hyperedges":
         if randomization_number < 0:
             dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
@@ -87,6 +91,12 @@ def read_input(config, config_key, data_prefix, dataset_name,
         # Get the list of hyperedges from Austin's format
         dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
         hyperedges = read_data(dataset_path, multiedges=False)
+
+    if _layer_randomization:
+        print("Applying layer randomization.")
+        hyperedges = layer_randomization(hyperedges)
+        results_path += f"_layer_randomization"
+
     return hyperedges, results_path
 
 if __name__ == "__main__":
@@ -104,6 +114,7 @@ if __name__ == "__main__":
     largest_cc = args.largest_cc
     seed_funct = args.seed_funct
     drop_size = args.drop_hyperedges_size
+    _layer_randomization = args.layer_randomization
 
     # Parse configuration file
     config = ConfigParser(os.environ)
@@ -123,7 +134,7 @@ if __name__ == "__main__":
 
     hyperedges, results_path = read_input(config, config_key, data_prefix,
                                          dataset_name, randomization_number,
-                                         results_path)
+                                         results_path, _layer_randomization)
     if drop_size > 0:
         print(f"Dropping hyperedges of size {drop_size}")
         hyperedges = drop_hyperedges_by_size(hyperedges, drop_size)
