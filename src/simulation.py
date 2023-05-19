@@ -32,7 +32,7 @@ def initialize_dynamics(rng, H, configuration):
            len(configuration["seed_activated"]) == configuration["initial_active"]:
             activated_nodes = configuration["seed_activated"]
         elif "seed_function" in configuration and configuration["seed_function"] == "uniform":
-            activated_nodes = rng.choice(H.nodes, configuration["initial_active"])
+            activated_nodes = rng.choice(H.nodes, configuration["initial_active"], replace=False)
         else:
             # Use the input function
             activated_nodes = configuration["seed_function"](rng, H, configuration)
@@ -53,7 +53,7 @@ def initialize_dynamics(rng, H, configuration):
             }
     elif configuration["seeding_strategy"] == "edge":
         if "seed_function" in configuration and configuration["seed_function"] == "uniform":
-            activated_edges = rng.choice(H.edges, configuration["initial_active"])
+            activated_edges = rng.choice(H.edges, configuration["initial_active"], replace=False)
         else:
             # Use the input function
             activated_edges = configuration["seed_function"](rng, H, configuration)
