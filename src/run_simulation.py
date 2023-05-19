@@ -77,11 +77,12 @@ def read_input(config, config_key, data_prefix, dataset_name,
         if randomization_number < 0:
             dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
             hyperedges = read_hyperedges(dataset_path)
-        else:
-            # Get the list of randomized hyperedges
-            random_path = f"{data_prefix}{dataset_name}/"
-            hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
-            results_path += f"_randomization-{randomization_number}"
+    elif randomization_number >= 0:
+        print("HERE")
+        # Get the list of randomized hyperedges
+        random_path = f"{data_prefix}{dataset_name}/"
+        hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+        results_path += f"_randomization-{randomization_number}"
     elif config[config_key]["read_function"] == "read_data":
         # Get the list of hyperedges from Austin's format
         dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}-"
@@ -188,6 +189,7 @@ if __name__ == "__main__":
     if drop_size > 0:
         output_filename += f"_drop_size-{drop_size}"
 
+    print(output_filename)
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
 
