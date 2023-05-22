@@ -117,7 +117,11 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
 
 
     obs_file = results_prefix + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
-    rnd_template = results_prefix + "_randomization-{}" + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
+
+    if "layer_randomization" in params_dict and params_dict["layer_randomization"]:
+        rnd_template = results_prefix + "_layer_randomization" + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
+    else:
+        rnd_template = results_prefix + "_randomization-{}" + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
 
 
 
