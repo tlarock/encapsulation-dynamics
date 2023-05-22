@@ -77,12 +77,10 @@ def parse_command_line():
 
 def read_input(config, config_key, data_prefix, dataset_name,
               randomization_number, results_path, _layer_randomization):
-    if config[config_key]["read_function"] == "read_hyperedges":
-        if randomization_number < 0:
-            dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
-            hyperedges = read_hyperedges(dataset_path)
+    if config[config_key]["read_function"] == "read_hyperedges" and randomization_number < 0:
+        dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
+        hyperedges = read_hyperedges(dataset_path)
     elif randomization_number >= 0:
-        print("HERE")
         # Get the list of randomized hyperedges
         random_path = f"{data_prefix}{dataset_name}/"
         hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
@@ -200,7 +198,6 @@ if __name__ == "__main__":
     if drop_size > 0:
         output_filename += f"_drop_size-{drop_size}"
 
-    print(output_filename)
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
 
