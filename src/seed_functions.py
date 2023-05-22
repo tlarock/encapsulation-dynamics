@@ -35,8 +35,8 @@ def biased_seed(rng, H, configuration, inverse=False):
 """
     Wrapper for inverse of the average hyperedge size bias.
 """
-def inverse_biased_seed(H, configuration):
-    return biased_seed(H, configuration, inverse=True)
+def inverse_biased_seed(rng, H, configuration):
+    return biased_seed(rng, H, configuration, inverse=True)
 
 
 """
