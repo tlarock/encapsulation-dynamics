@@ -20,11 +20,19 @@ def activate_edge(H, edge_id, t):
      activation_time: If node is active, time in the dynamics when the node became active. Default -1.
      activated_by (node only): ID of the hyperedge that activated the node. Default -1.
 """
-def initialize_dynamics(rng, H, configuration):
+def initialize_dynamics(rng, hyperedges, configuration):
+    # Construct an empty hypergraph
+    H = xgi.Hypergraph()
 
-    # All nodes are given active status 0 to start
+    # Add edges with default attributes
+    for edge in hyperedges:
+        H.add_edge(edge, active=0, activation_time=-1)
+
+    # Give nodes default attributes
     for node in H.nodes:
-        H.add_node(node, active = 0, activation_time = -1, activated_by = -1)
+        H.nodes[node]["active"] = 0
+        H.nodes[node]["activation_time"] = -1
+        H.nodes[node]["activated_by"] = -1
 
     if configuration["seeding_strategy"] == "node":
         # Seed nodes can either be predetermined, chosen by a function, or chosen at random
@@ -44,13 +52,6 @@ def initialize_dynamics(rng, H, configuration):
             # Arbitrary value to indicate which nodes are seeds
             H.nodes[node]["activated_by"] = -10
 
-        # All edges are initially inactive
-        edge_attribute_dict = dict()
-        for edge_id in H.edges:
-            edge_attribute_dict[edge_id] = {
-                "active": 0,
-                "activation_time":0
-            }
     elif configuration["seeding_strategy"] == "edge":
         if "seed_function" in configuration and configuration["seed_function"] == "uniform":
             activated_edges = rng.choice(H.edges, configuration["initial_active"], replace=False)
@@ -58,29 +59,15 @@ def initialize_dynamics(rng, H, configuration):
             # Use the input function
             activated_edges = configuration["seed_function"](rng, H, configuration)
 
-        # construct edge attributes
-        edge_attribute_dict = dict()
-        for edge_id in H.edges:
-            # Initialize entry
-            edge_attribute_dict[edge_id] = {
-                "active": 0,
-                "activation_time":0
-            }
-            # If the edge id was chosen as a seed, activate it
-            if edge_id in activated_edges:
-                edge_attribute_dict[edge_id]["active"] = 1
-                for node in H.edges.members(edge_id):
-                    H.nodes[node]["active"] = 1
-                    H.nodes[node]["activated_by"] = edge_id
-
-    # Set the edge attributes
-    xgi.set_edge_attributes(H, values=edge_attribute_dict)
+        # Activate the seed edges
+        for edge_id in activated_edges:
+            H, _ = activate_edge(H, edge_id, 0)
 
     return H
 
 def run_simulation(hyperedges, configuration, results_only=False):
     rng = np.random.default_rng()
-    H = initialize_dynamics(rng, xgi.Hypergraph(incoming_data=hyperedges), configuration)
+    H = initialize_dynamics(rng, hyperedges, configuration)
     T = configuration["steps"]
     # results_dict contains all of the results for this simulation.
     # Many results can also be computed from H after a simulation, but
