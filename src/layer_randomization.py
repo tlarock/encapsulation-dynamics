@@ -1,5 +1,4 @@
 import numpy as np
-from random import shuffle
 
 """
     Accepts a list of hyperedges. Returns a randomized list of hyperedges
@@ -18,11 +17,12 @@ def layer_randomization(hyperedges):
     random_hyperedges = {k:[] for k in by_size.keys()}
     # for each size
     for k in sorted(list(by_size.keys())):
-        # get the list of nodes
+        # get the list of nodes that apppear in hyperedges of size k
         nodes = list(set([u for he in by_size[k] for u in he]))
-        # shuffle the nodes to create a new mapping
+        # shuffle the nodes
         new_nodes = list(nodes)
-        shuffle(new_nodes)
+        rng.shuffle(new_nodes)
+        # Create a mapping that will relabel the nodes
         node_map = {nodes[i]: new_nodes[i] for i in range(len(nodes))}
         # remap the layer
         random_hyperedges[k] = [tuple([node_map[u] for u in he]) for he in by_size[k]]
