@@ -165,7 +165,6 @@ if __name__ == "__main__":
         "steps": config[config_key].getint("steps"),
         "active_threshold": active_threshold,
         "num_simulations": config[config_key].getint("num_simulations"),
-        #"single_edge_update": config[config_key].getboolean("single_edge_update"),
         "selection_name": selection_name,
         "selection_function": SELECTION_FUNCT_MAP[selection_name],
         "update_name": update_name,
