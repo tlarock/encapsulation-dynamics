@@ -60,6 +60,9 @@ def parse_command_line():
     parser.add_argument("--num_seeds_override", type=int, help="If >=1, overrides \
                         number of seeds argument in config file.",
                         default=-1, required=False)
+    parser.add_argument("--threshold_override", type=int, help="If >=0, overrides \
+                        threshold argument in config file.",
+                        default = -1, required=False)
     parser.add_argument("--largest_cc", action="store_true",
                         help="If given, compute the largest connected component \
                         of the hypergraph before running simulations.")
@@ -109,6 +112,7 @@ if __name__ == "__main__":
     default_key = args.default_key
     randomization_number = args.randomization_number
     num_seeds_override = args.num_seeds_override
+    threshold_override = args.threshold_override
     largest_cc = args.largest_cc
     seed_funct = args.seed_funct
     drop_size = args.drop_hyperedges_size
@@ -144,16 +148,22 @@ if __name__ == "__main__":
         else:
             print("Hyperedges already connected. Not computing largest component.")
 
+    # Check for override parameters passed via the command line
     if num_seeds_override >= 1:
         initial_active = num_seeds_override
     else:
         initial_active = config[config_key].getint("initial_active")
 
+    if threshold_override >= 0:
+        active_threshold = threshold_override
+    else:
+        active_threshold = config[config_key].getint("active_threshold")
+
     # Read configuration parameters
     configuration = {
         "initial_active": initial_active,
         "steps": config[config_key].getint("steps"),
-        "active_threshold": config[config_key].getint("active_threshold"),
+        "active_threshold": active_threshold,
         "num_simulations": config[config_key].getint("num_simulations"),
         #"single_edge_update": config[config_key].getboolean("single_edge_update"),
         "selection_name": selection_name,

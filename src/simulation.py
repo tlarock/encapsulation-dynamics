@@ -208,6 +208,7 @@ def run_simulation(hyperedges, configuration, results_only=False):
     with matrices of results for node and edge activation.
 """
 def run_many_simulations(hyperedges, configuration, verbose=False):
+    print(f"Running {num_sims} simulations of {configuration['steps']} steps on a single cpu.")
     output = dict()
     for i in range(configuration["num_simulations"]):
         if verbose:
@@ -228,7 +229,7 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
 """
 def run_many_parallel(hyperedges, configuration, ncpus):
     num_sims = configuration["num_simulations"]
-    print(f"Running {num_sims} simulations on {ncpus} cpus.")
+    print(f"Running {num_sims} simulations of {configuration['steps']} steps on {ncpus} cpus.")
     args = []
     for i in range(num_sims):
         args.append((hyperedges, configuration, True))
