@@ -141,10 +141,21 @@ def run_simulation(hyperedges, configuration, results_only=False):
             if t == 1:
                 # On the first timestep, count how many activated nodes are in each hyperedge
                 activated_node_counts = np.zeros(inactive_edges_indices.shape)
-                for edge_index in inactive_edges_indices:
-                    edge_id = inactive_edges[edge_index]
-                    activated_node_counts[edge_index] = len([u for u in H.edges.members(edge_id)
-                                                             if H.nodes[u]["active"] == 1])
+                inactive_edges_set = set(inactive_edges)
+                edge_index_lookup = {edge_id:i for i, edge_id in enumerate(inactive_edges)}
+                # Loop over every active node
+                for node in H.nodes.filterby_attr("active", 1):
+                    # Get the set of inactive edges the node participates in
+                    memberships = set(H.nodes.memberships(node))
+                    inactive_memberships = memberships.intersection(inactive_edges_set)
+                    # Increment the number of active nodes for the edge id
+                    for edge_id in inactive_memberships:
+                        edge_index = edge_index_lookup[edge_id]
+                        activated_node_counts[edge_index] += 1
+
+                # These are not needed anywhere else, so to save memory in big
+                # datasets I am explicitly deleting them
+                del inactive_edges_set, edge_index_lookup
 
                 # If down dynamics, compute the threshold
                 if configuration["update_name"] == "down":
@@ -182,7 +193,13 @@ def run_simulation(hyperedges, configuration, results_only=False):
                     # Only update edges that are not about to be
                     # deleted to avoid wasted computation
                     if edge_id not in activated_edge_ids:
-                        edge_index = np.where(inactive_edges == edge_id)[0][0]
+                        # ToDo: This is a slow operation. The best solution
+                        # would be to maintain a lookup dictionary from edge_id
+                        # back to edge_index. Updating this dictionary would
+                        # also be slow because it would require another scan
+                        # over the set of inactive edges, so the tradeoff is 
+                        # not great.
+                        edge_index = next(filter(lambda x: x[1]==edge_id, enumerate(inactive_edges)))[0]
                         activated_node_counts[edge_index] += 1
 
             # Remove the relevant indices from the numpy arrays
