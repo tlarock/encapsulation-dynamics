@@ -153,9 +153,8 @@ def run_simulation(hyperedges, configuration, results_only=False):
                         edge_index = edge_index_lookup[edge_id]
                         activated_node_counts[edge_index] += 1
 
-                # These are not needed anywhere else, so to save memory in big
-                # datasets I am explicitly deleting them
-                del inactive_edges_set, edge_index_lookup
+                # This is not needed anymore, so explicitly deleting it
+                del inactive_edges_set
 
                 # If down dynamics, compute the threshold
                 if configuration["update_name"] == "down":
@@ -193,13 +192,7 @@ def run_simulation(hyperedges, configuration, results_only=False):
                     # Only update edges that are not about to be
                     # deleted to avoid wasted computation
                     if edge_id not in activated_edge_ids:
-                        # ToDo: This is a slow operation. The best solution
-                        # would be to maintain a lookup dictionary from edge_id
-                        # back to edge_index. Updating this dictionary would
-                        # also be slow because it would require another scan
-                        # over the set of inactive edges, so the tradeoff is 
-                        # not great.
-                        edge_index = next(filter(lambda x: x[1]==edge_id, enumerate(inactive_edges)))[0]
+                        edge_index = edge_index_lookup[edge_id]
                         activated_node_counts[edge_index] += 1
 
             # Remove the relevant indices from the numpy arrays
@@ -212,6 +205,8 @@ def run_simulation(hyperedges, configuration, results_only=False):
             # Since we are not swapping and popping as in the single edge case,
             # just need a sequential range here.
             inactive_edges_indices = np.arange(inactive_edges.shape[0])
+            # Resetting edge_index_lookup
+            edge_index_lookup = dict(zip(inactive_edges, inactive_edges_indices))
 
     # This is gross but saves space
     if results_only:
