@@ -57,8 +57,6 @@ read_hyperedges_funct = args.read_hyperedges
 if randomization_num < 0:
     if not largest_cc and not read_hyperedges_funct:
         L = read_data(datapath, multiedges=multiedges)
-    elif largest_cc:
-        L = read_hyperedges(datapath + "cc.txt")
     elif read_hyperedges_funct:
         L = read_hyperedges(datapath)
 
@@ -73,13 +71,19 @@ else:
     hypergraph_idx = randomization_num + 1
     num_hypergraphs += hypergraph_idx
 
+if largest_cc:
+    if not check_hyperedges_connectivity(L):
+        print("Computing largest connected component.")
+        L = largest_connected_component(L, remove_single_nodes=True)
+    else:
+        print("Hyperedges already connected. Not computing largest component.")
+
 # DAG edges of observed data
 dag_rw, nth_rw, he_map_rw = encapsulation_dag(L)
 observed_dag_edges = dag_rw.number_of_edges()
 
 # Construct hypergraph
 G = hypergraph(L)
-
 
 # First randomization
 if first_iter_steps > 0:
