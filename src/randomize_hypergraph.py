@@ -11,7 +11,7 @@ import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
 from encapsulation_dag import *
-from utils import read_data, write_hypergraph, read_hyperedges
+from utils import read_data, write_hypergraph, read_hyperedges, check_hyperedges_connectivity, largest_connected_component, remap_nodes
 sys.path.append("../../hypergraph/")
 from hypergraph import hypergraph
 
@@ -55,7 +55,7 @@ read_hyperedges_funct = args.read_hyperedges
 
 # Read a hypergraph as a list of hyperedges
 if randomization_num < 0:
-    if not largest_cc and not read_hyperedges_funct:
+    if not read_hyperedges_funct:
         L = read_data(datapath, multiedges=multiedges)
     elif read_hyperedges_funct:
         L = read_hyperedges(datapath)
@@ -75,6 +75,7 @@ if largest_cc:
     if not check_hyperedges_connectivity(L):
         print("Computing largest connected component.")
         L = largest_connected_component(L, remove_single_nodes=True)
+        L = remap_nodes(L)
     else:
         print("Hyperedges already connected. Not computing largest component.")
 

@@ -177,3 +177,13 @@ def aggregate_rand_pickles(template, random_nums):
 
 def drop_hyperedges_by_size(hyperedges, drop_size):
     return [he for he in hyperedges if len(he) != drop_size]
+
+def remap_nodes(hyperedges):
+    node_idx = 0
+    node_mapping = dict()
+    for he in hyperedges:
+        for node in he:
+            if node not in node_mapping:
+                node_mapping[node] = node_idx
+                node_idx += 1
+    return [tuple([node_mapping[node] for node in he]) for he in hyperedges]
