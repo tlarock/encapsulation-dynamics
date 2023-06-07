@@ -93,14 +93,22 @@ def check_hyperedges_connectivity(hyperedges):
     not connected.
 """
 def largest_connected_component(hyperedges, remove_single_nodes=False):
+    # Project the hyperedges into a network
     projection = project_hyperedges(hyperedges)
+    # Get the list of connected components sorted from largest to smallest
     connected_components = sorted(list(nx.connected_components(projection)), key = lambda x: len(x), reverse=True)
-    nodes_to_remove = set([u for c in connected_components[1:] for u in c])
+    # We are only keeping nodes in the largest connected component
+    nodes_to_keep = set(connected_components[0])
     connected_component = []
     for he in hyperedges:
-        if len(set(he).intersection(nodes_to_remove)) == 0:
-            if not remove_single_nodes or len(he) > 1:
-                connected_component.append(he)
+        # Ignore single node hyperedges if called for
+        if remove_single_nodes and len(he) == 1:
+            continue
+
+        # If the nodes are in the largest connected component
+        if len(set(he).intersection(nodes_to_keep)) > 0:
+            # Add hyperedge
+            connected_component.append(he)
 
     return connected_component
 
