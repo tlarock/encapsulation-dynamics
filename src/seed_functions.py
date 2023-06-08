@@ -56,8 +56,8 @@ def degree_biased_seed(rng, H, configuration, inverse=False):
 """
     Wrapper for inverse of the hyperdegree.
 """
-def inverse_degree_biased(H, configuration):
-    return degree_biased_seed(H, configuration, inverse=True)
+def inverse_degree_biased(rng, H, configuration):
+    return degree_biased_seed(rng, H, configuration, inverse=True)
 
 ### FUNCTIONS FOR EDGE SEEDS ###
 """

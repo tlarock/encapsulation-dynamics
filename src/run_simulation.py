@@ -192,17 +192,8 @@ if __name__ == "__main__":
     output_filename += f"t-{configuration['active_threshold']}_"
     output_filename += f"ia-{configuration['initial_active']}_"
     output_filename += f"runs-{configuration['num_simulations']}_"
-    output_filename += seeding_strategy
-
-    # ToDo: This naming might be more complicated than necessary?
-    if seed_funct == "biased_seed":
-        output_filename += "_biased"
-    elif seed_funct == "inverse_biased_seed":
-        output_filename += "_inverse-biased"
-    elif seed_funct == "twonode":
-        output_filename += "_twonode"
-    elif "deg" in seed_funct or "size" in seed_funct:
-        output_filename += "_" + seed_funct
+    output_filename += seeding_strategy + "_"
+    output_filename += seed_funct
 
     if drop_size > 0:
         output_filename += f"_drop_size-{drop_size}"
