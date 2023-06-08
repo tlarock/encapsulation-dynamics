@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 from encapsulation_dag import encapsulation_dag, overlap_dag, overlap_graph
 from utils import read_data, read_hyperedges, largest_connected_component
 from layer_randomization import layer_randomization
@@ -33,9 +35,10 @@ def print_random_stats(cc, obs_encap, obs_overdag, obs_overlap):
 
 
 
-filename = "../data/coauth-MAG-History/coauth-MAG-History-"
-random_path = "../data/coauth-MAG-History/randomizations/"
-num_samples = 10
+dataset_name = "coauth-DBLP"
+filename = f"../data/{dataset_name}/{dataset_name}-"
+random_path = f"../data/{dataset_name}/randomizations/"
+num_samples = 5
 
 print("Reading hyperedges...")
 hyperedges = read_data(filename)
@@ -47,17 +50,59 @@ cc = largest_connected_component(hyperedges, remove_single_nodes=True)
 print("Done.")
 
 obs_encap, obs_overdag, obs_overlap = print_observed_stats(cc)
+obs_data = {
+    "encap": obs_encap,
+    "overdag": obs_overdag,
+    "overlap": obs_overlap
+}
+
 print()
+
+config_data = {
+    "encap":[],
+    "overdag":[],
+    "overlap":[]
+}
+
+layer_data = {
+    "encap":[],
+    "overdag":[],
+    "overlap":[]
+}
 
 for _ in range(num_samples):
     print("Reading configuration model data...")
     random = read_hyperedges(random_path + f"random-simple-{_}.txt")
     cc = largest_connected_component(random, remove_single_nodes=True)
-    print_random_stats(cc, obs_encap, obs_overdag, obs_overlap)
+    encap, overdag, overlap = print_random_stats(cc, obs_encap, obs_overdag, obs_overlap)
+    config_data["encap"].append(encap)
+    config_data["overdag"].append(overdag)
+    config_data["overlap"].append(overlap)
     print()
 
     print("Computing layer randomization...")
     random = layer_randomization(hyperedges)
     cc = largest_connected_component(random, remove_single_nodes=True)
-    print_random_stats(cc, obs_encap, obs_overdag, obs_overlap)
+    encap, overdag, overlap = print_random_stats(cc, obs_encap, obs_overdag, obs_overlap)
+    layer_data["encap"].append(encap)
+    layer_data["overdag"].append(overdag)
+    layer_data["overlap"].append(overlap)
     print()
+
+fig, axs = plt.subplots(1, 2, squeeze=False, figsize=(7, 5))
+for key in ["encap", "overdag", "overlap"]:
+    conf = np.array(config_data[key]) / obs_data[key]
+    axs[0][0].plot(list(range(conf.shape[0])), conf, label="Configuration " + key)
+    axs[0][1].plot(list(range(conf.shape[0])), conf, label="Configuration " + key)
+    axs[0][1].set(yscale="log")
+
+
+    layer = np.array(layer_data[key]) / obs_data[key]
+    axs[0][0].plot(list(range(layer.shape[0])), layer, label="Layer " + key)
+    axs[0][1].plot(list(range(layer.shape[0])), layer, label="Layer " + key)
+    axs[0][1].set(yscale="log")
+
+
+axs[0][0].legend()
+fig.tight_layout()
+fig.savefig(f"comparison_{dataset_name}.pdf", dpi=150)
