@@ -29,6 +29,7 @@ SELECTION_FUNCT_MAP = {
 }
 
 from seed_functions import *
+# ToDo: Separate this into edge and node seed functions with meaningful names
 SEED_FUNCT_MAP = {
     "biased_seed": biased_seed,
     "inverse_biased_seed": inverse_biased_seed,
