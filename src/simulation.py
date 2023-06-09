@@ -220,6 +220,7 @@ def run_simulation(hyperedges, configuration, results_only=False):
     with matrices of results for node and edge activation.
 """
 def run_many_simulations(hyperedges, configuration, verbose=False):
+    np.random.seed()
     num_sims = configuration["num_simulations"]
     print(f"Running {num_sims} simulations of {configuration['steps']} steps on a single cpu.")
     output = dict()
