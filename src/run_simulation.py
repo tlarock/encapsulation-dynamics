@@ -53,8 +53,12 @@ def parse_command_line():
     parser.add_argument("update_funct", type=str, help="Name of update function to use.")
     parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
     parser.add_argument("--seeding_strategy", type=str, required=False, choices=["node", "edge"], default="node",
-                        help="Seeding strategy to use. Default is node seeding.")
+            help="Seeding strategy to use. Default is node seeding.")
+    parser.add_argument("--seed_funct", required=False, default="uniform",
+                        choices=set(SEED_FUNCT_MAP.keys()),
+                        help="Name of seed function.")
     parser.add_argument("--default_key", type=str, help="Default key for config file.", default="default-arc", required=False)
+    parser.add_argument("--no_detail", action="store_true", help="If true, add nodetail to randomization name. Assumes randomization_number > 0.")
     parser.add_argument("--randomization_number", type=int, help="If >=0, will \
                         try to run on that randomization of the dataset.",
                         default=-1, required=False)
@@ -67,9 +71,6 @@ def parse_command_line():
     parser.add_argument("--largest_cc", action="store_true",
                         help="If given, compute the largest connected component \
                         of the hypergraph before running simulations.")
-    parser.add_argument("--seed_funct", required=False, default="uniform",
-                        choices=set(SEED_FUNCT_MAP.keys()),
-                        help="Name of seed function.")
     parser.add_argument("--drop_hyperedges_size", required=False, default=-1, type=int,
                         help="Given a size, drop all hyperedges of that size.")
     parser.add_argument("--layer_randomization", required=False,
@@ -80,14 +81,18 @@ def parse_command_line():
 
 
 def read_input(config, config_key, data_prefix, dataset_name,
-              randomization_number, results_path, _layer_randomization):
+              randomization_number, results_path, _layer_randomization, no_detail):
     if config[config_key]["read_function"] == "read_hyperedges" and randomization_number < 0:
         dataset_path = f"{data_prefix}{dataset_name}/{dataset_name}.txt"
         hyperedges = read_hyperedges(dataset_path)
     elif randomization_number >= 0:
         # Get the list of randomized hyperedges
         random_path = f"{data_prefix}{dataset_name}/"
-        hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+        if not no_detail:
+            hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-{randomization_number}.txt")
+        else:
+            hyperedges = read_hyperedges(random_path + f"randomizations/random-simple-nodetail-{randomization_number}.txt")
+
         results_path += f"_randomization-{randomization_number}"
     elif config[config_key]["read_function"] == "read_data":
         # Get the list of hyperedges from Austin's format
@@ -118,6 +123,7 @@ if __name__ == "__main__":
     seed_funct = args.seed_funct
     drop_size = args.drop_hyperedges_size
     _layer_randomization = args.layer_randomization
+    no_detail = args.no_detail
 
     # Parse configuration file
     config = ConfigParser(os.environ)
@@ -137,7 +143,7 @@ if __name__ == "__main__":
 
     hyperedges, results_path = read_input(config, config_key, data_prefix,
                                          dataset_name, randomization_number,
-                                         results_path, _layer_randomization)
+                                         results_path, _layer_randomization, no_detail)
     if drop_size > 0:
         print(f"Dropping hyperedges of size {drop_size}")
         hyperedges = drop_hyperedges_by_size(hyperedges, drop_size)

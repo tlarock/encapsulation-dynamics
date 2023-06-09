@@ -85,14 +85,14 @@ observed_dag_edges = dag_rw.number_of_edges()
 
 # Construct hypergraph
 G = hypergraph(L)
-
+detailed = False
 # First randomization
 if first_iter_steps > 0:
     print(f"Running {first_iter_steps} steps as initialization of Markov chain.")
-    G.MH(n_steps = first_iter_steps, label = 'vertex', detailed = True, n_clash = 1)
+    G.MH(n_steps = first_iter_steps, label = 'vertex', detailed = detailed, n_clash = 1)
 
 print(f"Computing {num_hypergraphs} randomizations with {steps_per_iter} steps each.")
-G.MH(n_steps = steps_per_iter, label = 'vertex', detailed = True, n_clash = 1)
+G.MH(n_steps = steps_per_iter, label = 'vertex', detailed = detailed, n_clash = 1)
 dag_rw, nth_rw, he_map_rw = encapsulation_dag(G.C)
 num_dag_edges = []
 num_dag_edges.append(dag_rw.number_of_edges())
@@ -102,13 +102,16 @@ if not multiedges:
 else:
     output_file = datadir + "/randomizations/random-"
 
+if not detailed:
+    output_file += "nodetail-"
+
 # Randomize data
 print(hypergraph_idx)
 write_hypergraph(G.C, output_file + f"{hypergraph_idx}.txt")
 while hypergraph_idx < num_hypergraphs:
     hypergraph_idx += 1
     print(hypergraph_idx)
-    G.MH(n_steps = steps_per_iter, label = 'vertex', detailed = True, n_clash = 1)
+    G.MH(n_steps = steps_per_iter, label = 'vertex', detailed = detailed, n_clash = 1)
     write_hypergraph(G.C, output_file + f"{hypergraph_idx}.txt")
     dag_rw, nth_rw, he_map_rw = encapsulation_dag(G.C)
     num_dag_edges.append(dag_rw.number_of_edges())
