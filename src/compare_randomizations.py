@@ -35,7 +35,7 @@ def print_random_stats(cc, obs_encap, obs_overdag, obs_overlap):
 
 
 
-dataset_name = "coauth-DBLP"
+dataset_name = "coauth-MAG-History"
 filename = f"../data/{dataset_name}/{dataset_name}-"
 random_path = f"../data/{dataset_name}/randomizations/"
 num_samples = 5
@@ -72,7 +72,7 @@ layer_data = {
 
 for _ in range(num_samples):
     print("Reading configuration model data...")
-    random = read_hyperedges(random_path + f"random-simple-{_}.txt")
+    random = read_hyperedges(random_path + f"random-simple-nodetail-{_}.txt")
     cc = largest_connected_component(random, remove_single_nodes=True)
     encap, overdag, overlap = print_random_stats(cc, obs_encap, obs_overdag, obs_overlap)
     config_data["encap"].append(encap)

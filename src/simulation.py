@@ -232,6 +232,10 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
                 output[key] = vals_arr
             else:
                 output[key] = np.vstack((output[key], vals_arr))
+
+    output["total_edges"] = len(hyperedges)
+    output["total_nodes"] = len(set([u for he in hyperedges for u in he]))
+
     return output
 
 
@@ -257,4 +261,8 @@ def run_many_parallel(hyperedges, configuration, ncpus):
                 output[key] = vals_arr
             else:
                 output[key] = np.vstack((output[key], vals_arr))
+
+    output["total_edges"] = len(hyperedges)
+    output["total_nodes"] = len(set([u for he in hyperedges for u in he]))
+
     return output
