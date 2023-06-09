@@ -160,7 +160,7 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
 
     try:
         if len(random_nums) == 1:
-            with open(rnd_template.format(0), "rb") as fpickle:
+            with open(rnd_template.format(random_nums[0]), "rb") as fpickle:
                 output_rnd = pickle.load(fpickle)
         else:
             output_rnd = aggregate_rand_pickles(rnd_template, random_nums)

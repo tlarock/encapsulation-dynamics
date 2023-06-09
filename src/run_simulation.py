@@ -183,8 +183,6 @@ if __name__ == "__main__":
     else:
         output = run_many_simulations(hyperedges, configuration)
 
-    output["total_edges"] = len(hyperedges)
-    output["total_nodes"] = len(set([u for he in hyperedges for u in he]))
     # Output data
     output_filename = results_path
     output_filename += f"_{selection_name}_{update_name}_"
