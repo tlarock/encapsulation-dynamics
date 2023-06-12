@@ -263,7 +263,8 @@ def update_active_subface_counts(H, inactive_edge_info,
                                  edge_indices_to_activate, edge_index_lookup):
     for edge_index in edge_indices_to_activate:
         edge_id = inactive_edge_info["edges"][edge_index]
-        for sup_id in H.edges[edge_id]["superfaces"]:
+        inactive_superfaces = H.edges[edge_id]["superfaces"] - inactive_edge_info["activated_edges"]
+        for sup_id in inactive_superfaces:
             sup_index = edge_index_lookup[sup_id]
             inactive_edge_info["active_counts"][sup_index] += 1
 
