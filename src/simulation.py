@@ -263,7 +263,8 @@ def add_subface_attribute(H, dag_type="both"):
 
 def count_active_subfaces(H,
                           inactive_edge_info,
-                          edge_index_lookup):
+                          edge_index_lookup,
+                          nodes_as_subfaces=False):
     # Initialize active counts to 0
     inactive_edge_info["active_counts"] = np.zeros(inactive_edge_info["indices"].shape)
 
@@ -277,12 +278,13 @@ def count_active_subfaces(H,
     # As a special case, we count single nodes as active 0-faces in 2-node edges
     # It is a special case because we don't include individual nodes as
     # hyperedges, otherwise it would work as normal.
-    for node in H.nodes.filterby_attr("active", 1):
-        memberships = H.nodes.memberships(node) - inactive_edge_info["activated_edges"]
-        two_node_edges = [sup_id for sup_id in memberships if len(H.edges.members(sup_id)) == 2]
-        for sup_id in two_node_edges:
-            sup_index = edge_index_lookup[sup_id]
-            inactive_edge_info["active_counts"][sup_index] += 1
+    if nodes_as_subfaces:
+        for node in H.nodes.filterby_attr("active", 1):
+            memberships = H.nodes.memberships(node) - inactive_edge_info["activated_edges"]
+            two_node_edges = [sup_id for sup_id in memberships if len(H.edges.members(sup_id)) == 2]
+            for sup_id in two_node_edges:
+                sup_index = edge_index_lookup[sup_id]
+                inactive_edge_info["active_counts"][sup_index] += 1
 
     # For each active edge, increment the active_count for its superfaces
     for edge_id in H.edges.filterby_attr("active", 1):
@@ -296,14 +298,16 @@ def update_active_subface_counts(H,
                                  inactive_edge_info,
                                  edge_indices_to_activate,
                                  newly_active_nodes,
-                                 edge_index_lookup):
-    # For every newly active node, update its 2-node edges
-    for node in newly_active_nodes:
-        for edge_id in H.nodes.memberships(node):
-            if edge_id not in inactive_edge_info["activated_edges"] and \
-               len(H.edges.members(edge_id)) == 2:
-                sup_index = edge_index_lookup[edge_id]
-                inactive_edge_info["active_counts"][sup_index] += 1
+                                 edge_index_lookup,
+                                 nodes_as_subfaces=False):
+    if nodes_as_subfaces:
+        # For every newly active node, update its 2-node edges
+        for node in newly_active_nodes:
+            for edge_id in H.nodes.memberships(node):
+                if edge_id not in inactive_edge_info["activated_edges"] and \
+                   len(H.edges.members(edge_id)) == 2:
+                    sup_index = edge_index_lookup[edge_id]
+                    inactive_edge_info["active_counts"][sup_index] += 1
 
     # For every newly active edge, update its superfaces
     for edge_index in edge_indices_to_activate:
