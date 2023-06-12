@@ -146,7 +146,7 @@ def initialize_dynamics(rng, hyperedges, configuration):
     # For subface simulations, need to
     # compute encapsulation relationships
     if configuration["update_name"] == "subface":
-        add_subface_attribute(H)
+        add_subface_attribute(H, dag_type="super")
 
     # Give nodes default attributes
     for node in H.nodes:
@@ -195,14 +195,26 @@ def initialize_dynamics(rng, hyperedges, configuration):
     stop storing the subfaces (but leaving for now for completeness/in case
     they are convenient later).
 """
-def add_subface_attribute(H):
+def add_subface_attribute(H, dag_type="both"):
+    assert dag_type in ["super", "sub", "both"], f"{dag_type} not a valid option for dag_type."
+
+    sub = False
+    sup = False
+    if dag_type == "both":
+        sub = True
+        sup = True
+    elif dag_type == "super":
+        sup = True
+    elif dag_type == "sub":
+        sub = True
+
     # Loop over the hyperedges
     for edge_id in H.edges:
         # Initialize the subfaces dict if necessary
-        if not ("subfaces" in H.edges[edge_id]):
+        if sub and not ("subfaces" in H.edges[edge_id]):
             H.edges[edge_id]["subfaces"] = set()
 
-        if not ("superfaces" in H.edges[edge_id]):
+        if sup and not ("superfaces" in H.edges[edge_id]):
             H.edges[edge_id]["superfaces"] = set()
 
         # Get the hyperedge
@@ -216,9 +228,14 @@ def add_subface_attribute(H):
         # Check all of the candidates once
         candidates_checked = set()
         for cand_id in candidates:
-            # If a cand is already encapsulating edge_id, consider it checked
-            if "subfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["subfaces"]:
-                candidates_checked.add(cand_id)
+            if sub:
+                # If edge_id is already a subface of cand_id, skip
+                if "subfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["subfaces"]:
+                    candidates_checked.add(cand_id)
+            if sup:
+                # If edge_id is already a superface of cand_id, skip
+                if "superfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["superfaces"]:
+                    candidates_checked.add(cand_id)
 
             # Skip a candidate if it has already been checked
             if cand_id in candidates_checked:
@@ -228,18 +245,22 @@ def add_subface_attribute(H):
             cand = H.edges.members(cand_id)
             if len(edge) > len(cand):
                 if is_encapsulated(edge, cand):
-                    H.edges[edge_id]["subfaces"].add(cand_id)
-                    if "superfaces" in H.edges[cand_id]:
-                        H.edges[cand_id]["superfaces"].add(edge_id)
-                    else:
-                        H.edges[cand_id]["superfaces"] = set([edge_id])
+                    if sub:
+                        H.edges[edge_id]["subfaces"].add(cand_id)
+                    if sup:
+                        if "superfaces" in H.edges[cand_id]:
+                            H.edges[cand_id]["superfaces"].add(edge_id)
+                        else:
+                            H.edges[cand_id]["superfaces"] = set([edge_id])
             elif len(cand) > len(edge):
                 if is_encapsulated(cand, edge):
-                    H.edges[edge_id]["superfaces"].add(cand_id)
-                    if "subfaces" in H.edges[cand_id]:
-                        H.edges[cand_id]["subfaces"].add(edge_id)
-                    else:
-                        H.edges[cand_id]["subfaces"] = set([edge_id])
+                    if sup:
+                        H.edges[edge_id]["superfaces"].add(cand_id)
+                    if sub:
+                        if "subfaces" in H.edges[cand_id]:
+                            H.edges[cand_id]["subfaces"].add(edge_id)
+                        else:
+                            H.edges[cand_id]["subfaces"] = set([edge_id])
 
 
 def count_active_subfaces(inactive_edge_info, H, edge_index_lookup):
