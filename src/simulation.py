@@ -187,13 +187,11 @@ def initialize_dynamics(rng, hyperedges, configuration):
 
 """
     Add subfaces attribute to the hypergraph. Effectively computes
-    the encapsulation DAG in both directions.
-
-    ToDo: Despite the dynamics being driven from subface --> superface,
-    I am actually not ever using the subfaces themselves, since it is
-    always faster to know the parent. If memory becomes an issue, I can
-    stop storing the subfaces (but leaving for now for completeness/in case
-    they are convenient later).
+    the encapsulation DAG in both directions. Option dag_type controls
+    which relationships are stored. Since it is actually more efficient
+    to store for each smaller hyperedge the hyperedges that it is a subface
+    of, meaning option dag_type="super" for superfaces. Including options
+    for computing only subfaces or both for potential future use cases.
 """
 def add_subface_attribute(H, dag_type="both"):
     assert dag_type in ["super", "sub", "both"], f"{dag_type} not a valid option for dag_type."
@@ -213,7 +211,7 @@ def add_subface_attribute(H, dag_type="both"):
         # Initialize the subfaces dict if necessary
         if sub and not ("subfaces" in H.edges[edge_id]):
             H.edges[edge_id]["subfaces"] = set()
-
+        # Initialize the superfaces dict if necessary
         if sup and not ("superfaces" in H.edges[edge_id]):
             H.edges[edge_id]["superfaces"] = set()
 
@@ -229,11 +227,11 @@ def add_subface_attribute(H, dag_type="both"):
         candidates_checked = set()
         for cand_id in candidates:
             if sub:
-                # If edge_id is already a subface of cand_id, skip
+                # If edge_id is already a subface of cand_id, mark as checked
                 if "subfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["subfaces"]:
                     candidates_checked.add(cand_id)
             if sup:
-                # If edge_id is already a superface of cand_id, skip
+                # If edge_id is already a superface of cand_id, mark as checked
                 if "superfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["superfaces"]:
                     candidates_checked.add(cand_id)
 
@@ -241,7 +239,7 @@ def add_subface_attribute(H, dag_type="both"):
             if cand_id in candidates_checked:
                 continue
 
-            # Check whether the candidate is a subface
+            # Check whether the candidate is a sub/superface
             cand = H.edges.members(cand_id)
             if len(edge) > len(cand):
                 if is_encapsulated(edge, cand):
