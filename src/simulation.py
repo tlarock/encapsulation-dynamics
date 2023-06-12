@@ -279,7 +279,7 @@ def count_active_subfaces(H,
     # hyperedges, otherwise it would work as normal.
     for node in H.nodes.filterby_attr("active", 1):
         memberships = H.nodes.memberships(node) - inactive_edge_info["activated_edges"]
-        two_node_edges = H.edges(memberships).filterby("order", 1)
+        two_node_edges = [sup_id for sup_id in memberships if len(H.edges.members(sup_id)) == 2]
         for sup_id in two_node_edges:
             sup_index = edge_index_lookup[sup_id]
             inactive_edge_info["active_counts"][sup_index] += 1
