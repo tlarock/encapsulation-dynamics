@@ -261,7 +261,9 @@ def add_subface_attribute(H, dag_type="both"):
                             H.edges[cand_id]["subfaces"] = set([edge_id])
 
 
-def count_active_subfaces(inactive_edge_info, H, edge_index_lookup):
+def count_active_subfaces(H,
+                          inactive_edge_info,
+                          edge_index_lookup):
     # Initialize active counts to 0
     inactive_edge_info["active_counts"] = np.zeros(inactive_edge_info["indices"].shape)
 
@@ -271,6 +273,18 @@ def count_active_subfaces(inactive_edge_info, H, edge_index_lookup):
         return
 
     inactive_edges_set = set(inactive_edge_info["edges"])
+
+    # As a special case, we count single nodes as active 0-faces in 2-node edges
+    # It is a special case because we don't include individual nodes as
+    # hyperedges, otherwise it would work as normal.
+    for node in H.nodes.filterby_attr("active", 1):
+        memberships = H.nodes.memberships(node) - inactive_edge_info["activated_edges"]
+        two_node_edges = H.edges(memberships).filterby("order", 1)
+        for sup_id in two_node_edges:
+            sup_index = edge_index_lookup[sup_id]
+            inactive_edge_info["active_counts"][sup_index] += 1
+
+    # For each active edge, increment the active_count for its superfaces
     for edge_id in H.edges.filterby_attr("active", 1):
         inactive_superfaces = H.edges[edge_id]["superfaces"] - inactive_edge_info["activated_edges"]
         for sup_id in inactive_superfaces:
@@ -278,8 +292,20 @@ def count_active_subfaces(inactive_edge_info, H, edge_index_lookup):
             inactive_edge_info["active_counts"][sup_index] += 1
 
 
-def update_active_subface_counts(H, inactive_edge_info,
-                                 edge_indices_to_activate, edge_index_lookup):
+def update_active_subface_counts(H,
+                                 inactive_edge_info,
+                                 edge_indices_to_activate,
+                                 newly_active_nodes,
+                                 edge_index_lookup):
+    # For every newly active node, update its 2-node edges
+    for node in newly_active_nodes:
+        for edge_id in H.nodes.memberships(node):
+            if edge_id not in inactive_edge_info["activated_edges"] and \
+               len(H.edges.members(edge_id)) == 2:
+                sup_index = edge_index_lookup[edge_id]
+                inactive_edge_info["active_counts"][sup_index] += 1
+
+    # For every newly active edge, update its superfaces
     for edge_index in edge_indices_to_activate:
         edge_id = inactive_edge_info["edges"][edge_index]
         inactive_superfaces = H.edges[edge_id]["superfaces"] - inactive_edge_info["activated_edges"]
@@ -288,7 +314,9 @@ def update_active_subface_counts(H, inactive_edge_info,
             inactive_edge_info["active_counts"][sup_index] += 1
 
 
-def count_active_nodes(inactive_edge_info, H, edge_index_lookup):
+def count_active_nodes(H,
+                       inactive_edge_info,
+                       edge_index_lookup):
     # Initialize active counts to 0
     inactive_edge_info["active_counts"] = np.zeros(inactive_edge_info["indices"].shape)
 
@@ -305,7 +333,9 @@ def count_active_nodes(inactive_edge_info, H, edge_index_lookup):
             inactive_edge_info["active_counts"][edge_index] += 1
 
 
-def update_active_node_counts(H, inactive_edge_info, newly_active_nodes,
+def update_active_node_counts(H,
+                              inactive_edge_info,
+                              newly_active_nodes,
                               edge_index_lookup):
     for node in newly_active_nodes:
         for edge_id in H.nodes.memberships(node):
@@ -333,9 +363,9 @@ def simultaneous_update_step(H, configuration, results_dict, t,
 
         # Count the number of active substructures in each inactive edge
         if count_type == "node":
-            count_active_nodes(inactive_edge_info, H, edge_index_lookup)
+            count_active_nodes(H, inactive_edge_info, edge_index_lookup)
         elif count_type == "subface":
-            count_active_subfaces(inactive_edge_info, H, edge_index_lookup)
+            count_active_subfaces(H, inactive_edge_info, edge_index_lookup)
 
         # If down dynamics, compute the threshold
         if configuration["update_name"] == "down":
@@ -364,9 +394,15 @@ def simultaneous_update_step(H, configuration, results_dict, t,
 
     # Update the relevant activated counts
     if count_type == "node":
-        update_active_node_counts(H, inactive_edge_info, newly_active_nodes, edge_index_lookup)
+        update_active_node_counts(H,
+                                  inactive_edge_info,
+                                  newly_active_nodes,
+                                  edge_index_lookup)
     elif count_type == "subface":
-        update_active_subface_counts(H, inactive_edge_info, edge_indices_to_activate, edge_index_lookup)
+        update_active_subface_counts(H,
+                                     inactive_edge_info,
+                                     edge_indices_to_activate,
+                                     newly_active_nodes, edge_index_lookup)
 
     # Remove the relevant indices from the numpy arrays
     inactive_edge_info["edges"] = np.delete(inactive_edge_info["edges"], edge_indices_to_activate)
