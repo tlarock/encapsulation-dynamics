@@ -1,6 +1,7 @@
 import xgi
 import numpy as np
 from multiprocessing import Pool
+from encapsulation_dag import is_encapsulated
 
 """
     Runs multiple simulations on hyperedges using
@@ -102,7 +103,11 @@ def run_simulation(hyperedges, configuration, results_only=False):
             break
 
         if configuration["selection_name"] == "simultaneous":
-            simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "node")
+            if configuration["update_name"] != "subface":
+                simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "node")
+            else:
+                simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "subface")
+
             if results_dict["edges_activated"][t] < 1:
                 # If no edge was activated, the simulation can stop
                 break
@@ -130,6 +135,11 @@ def initialize_dynamics(rng, hyperedges, configuration):
     # Add edges with default attributes
     for edge in hyperedges:
         H.add_edge(edge, active=0, activation_time=-1)
+
+    if configuration["update_name"] == "subface":
+        print("Starting DAG computation...")
+        add_subface_attribute(H)
+        print("Done.")
 
     # Give nodes default attributes
     for node in H.nodes:
@@ -168,11 +178,87 @@ def initialize_dynamics(rng, hyperedges, configuration):
 
     return H
 
+"""
+    Add subfaces attribute to the hypergraph. Effectively computes
+    the encapsulation DAG in both directions.
+"""
+def add_subface_attribute(H):
+    # Loop over the hyperedges
+    for edge_id in H.edges:
+        # Initialize the subfaces dict if necessary
+        if not ("subfaces" in H.edges[edge_id]):
+            H.edges[edge_id]["subfaces"] = set()
+
+        if not ("superfaces" in H.edges[edge_id]):
+            H.edges[edge_id]["superfaces"] = set()
+
+        # Get the hyperedge
+        edge = H.edges.members(edge_id)
+
+        # Get all potentially encapsulated hyperedges
+        candidates = set()
+        for node in edge:
+            candidates.update(H.nodes.memberships(node))
+
+        # Check all of the candidates once
+        candidates_checked = set()
+        for cand_id in candidates:
+            # If a cand is already encapsulating edge_id, consider it checked
+            if "subfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["subfaces"]:
+                candidates_checked.add(cand_id)
+
+            # Skip a candidate if it has already been checked
+            if cand_id in candidates_checked:
+                continue
+
+            # Check whether the candidate is a subface
+            cand = H.edges.members(cand_id)
+            if len(edge) > len(cand):
+                if is_encapsulated(edge, cand):
+                    H.edges[edge_id]["subfaces"].add(cand_id)
+                    if "superfaces" in H.edges[cand_id]:
+                        H.edges[cand_id]["superfaces"].add(edge_id)
+                    else:
+                        H.edges[cand_id]["superfaces"] = set([edge_id])
+            elif len(cand) > len(edge):
+                if is_encapsulated(cand, edge):
+                    H.edges[edge_id]["superfaces"].add(cand_id)
+                    if "subfaces" in H.edges[cand_id]:
+                        H.edges[cand_id]["subfaces"].add(edge_id)
+                    else:
+                        H.edges[cand_id]["subfaces"] = set([edge_id])
+
+
+def count_active_subfaces(inactive_edge_info, H, edge_index_lookup):
+    # Initialize active counts to 0
+    inactive_edge_info["active_counts"] = np.zeros(inactive_edge_info["indices"].shape)
+
+    # If all edges are inactive, nothing to compute since all subfaces are
+    # inactive
+    if inactive_edge_info["edges"].shape[0] == H.num_edges:
+        return
+
+    inactive_edges_set = set(inactive_edge_info["edges"])
+    for edge_id in H.edges.filterby_attr("active", 1):
+        inactive_superfaces = H.edges[edge_id]["superfaces"] - inactive_edge_info["activated_edges"]
+        for sup_id in inactive_superfaces:
+            sup_index = edge_index_lookup[sup_id]
+            inactive_edge_info["active_counts"][sup_index] += 1
+
+
+def update_active_subface_counts(H, inactive_edge_info,
+                                 edge_indices_to_activate, edge_index_lookup):
+    for edge_index in edge_indices_to_activate:
+        edge_id = inactive_edge_info["edges"][edge_index]
+        for sup_id in H.edges[edge_id]["superfaces"]:
+            sup_index = edge_index_lookup[sup_id]
+            inactive_edge_info["active_counts"][sup_index] += 1
+
 
 def count_active_nodes(inactive_edge_info, H, edge_index_lookup):
-    # On the first timestep, count how many relevant substructures are
-    # activated already
+    # Initialize active counts to 0
     inactive_edge_info["active_counts"] = np.zeros(inactive_edge_info["indices"].shape)
+
     inactive_edges_set = set(inactive_edge_info["edges"])
 
     # Loop over every active node
@@ -185,10 +271,17 @@ def count_active_nodes(inactive_edge_info, H, edge_index_lookup):
             edge_index = edge_index_lookup[edge_id]
             inactive_edge_info["active_counts"][edge_index] += 1
 
-def count_active_subfaces(inactive_edge_info, H):
-    # ToDo: Here I will need the DAG. Where should I store it? Maybe in
-    # inactive_edge_info?
-    pass
+
+def update_active_node_counts(H, inactive_edge_info, newly_active_nodes,
+                              edge_index_lookup):
+    for node in newly_active_nodes:
+        for edge_id in H.nodes.memberships(node):
+            # Only update edges that are not about to be
+            # deleted to avoid wasted computation
+            if edge_id not in inactive_edge_info["activated_edges"]:
+                edge_index = edge_index_lookup[edge_id]
+                inactive_edge_info["active_counts"][edge_index] += 1
+
 
 """
     Model step definition for simultaneous update over all inactive edges.
@@ -202,21 +295,24 @@ def simultaneous_update_step(H, configuration, results_dict, t,
     edge_index_lookup = dict(zip(inactive_edge_info["edges"], inactive_edge_info["indices"]))
 
     if t == 1:
+        # Store the set of activated edges
+        inactive_edge_info["activated_edges"] = set(H.edges.filterby_attr("active", 1))
         if count_type == "node":
             count_active_nodes(inactive_edge_info, H, edge_index_lookup)
         elif count_type == "subface":
-            count_active_subfaces(inactive_edge_info, H)
+            print("Starting count of active subfaces...")
+            count_active_subfaces(inactive_edge_info, H, edge_index_lookup)
+            print("Done.")
 
         # If down dynamics, compute the threshold
         if configuration["update_name"] == "down":
             inactive_edge_info["thresholds"] = inactive_edge_info["sizes"] - configuration["active_threshold"]
             inactive_edge_info["thresholds"][inactive_edge_info["thresholds"] <= 0] = 1
-        else:
+        elif configuration["update_name"] in ["up", "subface"]:
             # If up dynamics the threshold is static. This also applies for
             # count_type subface.
             inactive_edge_info["thresholds"] = configuration["active_threshold"]
 
-        inactive_edge_info["activated_edges"] = set()
 
     # Get the indices of hyperedges to activate this step
     edge_indices_to_activate = (inactive_edge_info["active_counts"] >= inactive_edge_info["thresholds"]).nonzero()[0]
@@ -234,14 +330,11 @@ def simultaneous_update_step(H, configuration, results_dict, t,
         # make it list-like.
         results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
 
-    # Update the activated node counts
-    for node in newly_active_nodes:
-        for edge_id in H.nodes.memberships(node):
-            # Only update edges that are not about to be
-            # deleted to avoid wasted computation
-            if edge_id not in inactive_edge_info["activated_edges"]:
-                edge_index = edge_index_lookup[edge_id]
-                inactive_edge_info["active_counts"][edge_index] += 1
+    # Update the relevant activated counts
+    if count_type == "node":
+        update_active_node_counts(H, inactive_edge_info, newly_active_nodes, edge_index_lookup)
+    elif count_type == "subface":
+        update_active_subface_counts(H, inactive_edge_info, edge_indices_to_activate, edge_index_lookup)
 
     # Remove the relevant indices from the numpy arrays
     inactive_edge_info["edges"] = np.delete(inactive_edge_info["edges"], edge_indices_to_activate)
@@ -249,6 +342,7 @@ def simultaneous_update_step(H, configuration, results_dict, t,
     inactive_edge_info["active_counts"] = np.delete(inactive_edge_info["active_counts"], edge_indices_to_activate)
     if configuration["update_name"] == "down":
         inactive_edge_info["thresholds"] = np.delete(inactive_edge_info["thresholds"], edge_indices_to_activate)
+
 
 """
     Model step definition for single edge per timestep update.

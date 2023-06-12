@@ -16,7 +16,8 @@ from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
     "up": absolute_update_up,
-    "down": absolute_update_down
+    "down": absolute_update_down,
+    "subface": None
 }
 
 from selection_rules import *
