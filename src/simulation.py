@@ -5,8 +5,9 @@ from encapsulation_dag import is_encapsulated
 
 """
     Runs multiple simulations on hyperedges using
-    settings in configuration. Returns a dictionary
-    with matrices of results for node and edge activation.
+    settings in configuration on a single CPU.
+    Returns a dictionary with matrices of results
+    for node and edge activation.
 """
 def run_many_simulations(hyperedges, configuration, verbose=False):
     np.random.seed()
@@ -64,8 +65,12 @@ def run_many_parallel(hyperedges, configuration, ncpus):
 """
 def run_simulation(hyperedges, configuration, results_only=False):
     rng = np.random.default_rng()
+    # Initialize the xgi.Hypergraph structure using parameters
+    # stored in configuration
     H = initialize_dynamics(rng, hyperedges, configuration)
+
     T = configuration["steps"]
+
     # results_dict contains all of the results for this simulation.
     # Many results can also be computed from H after a simulation, but
     # for convenience I store them separately.
@@ -84,7 +89,7 @@ def run_simulation(hyperedges, configuration, results_only=False):
     inactive_edge_info = dict()
     # inactive_edge_info["edges"]: The actual list of edge IDs
     inactive_edge_info["edges"] = np.array(list(H.edges.filterby_attr("active", 0)))
-    # _sizes: # of nodes in each edge
+    # ["sizes"]: # of nodes in each edge
     if configuration["selection_name"] in ["uniform", "biased", "simultaneous"]:
         inactive_edge_info["sizes"] = np.array([float(len(H.edges.members(edge_id))) for edge_id in
                             inactive_edge_info["edges"]])
@@ -92,30 +97,32 @@ def run_simulation(hyperedges, configuration, results_only=False):
         inactive_edge_info["sizes"] = np.array([1.0 / float(len(H.edges.members(edge_id))) for edge_id in
                             inactive_edge_info["edges"]])
 
+    # ["sum_of_sizes"]: int representing the sum of the sizes array
     inactive_edge_info["sum_of_sizes"] = inactive_edge_info["sizes"].sum()
-    # _indices: List of indices matching across inactive_edge_info["edges"] and _sizes
-    # This is the list we will actually sample from.
+
+    # ["indices"]: List of indices matching across inactive_edge_info["edges"]
+    # and ["sizes"]. This is the list we will actually sample from.
     inactive_edge_info["indices"] = np.array(list(range(0, len(inactive_edge_info["edges"]))))
 
     for t in range(1, T+1):
         # Check for saturation
-        if len(inactive_edge_info["edges"]) == 0:
+        if inactive_edge_info["edges"].shape[0] == 0:
             break
 
         if configuration["selection_name"] == "simultaneous":
-            if configuration["update_name"] != "subface":
+            if configuration["update_name"] in ["up", "down"]:
                 simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "node")
-            else:
+            elif configuration["update_name"] == "subface":
                 simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "subface")
 
             if results_dict["edges_activated"][t] < 1:
-                # If no edge was activated, the simulation can stop
+                # If no edge was activated this step, the simulation can stop
                 break
         else:
             single_edge_step(H, configuration, results_dict, t, rng,
                     inactive_edge_info)
 
-    # This is gross but saves space
+    # This is gross but saves memory in parallel simulations
     if results_only:
         return results_dict
     else:
@@ -136,10 +143,10 @@ def initialize_dynamics(rng, hyperedges, configuration):
     for edge in hyperedges:
         H.add_edge(edge, active=0, activation_time=-1)
 
+    # For subface simulations, need to
+    # compute encapsulation relationships
     if configuration["update_name"] == "subface":
-        print("Starting DAG computation...")
         add_subface_attribute(H)
-        print("Done.")
 
     # Give nodes default attributes
     for node in H.nodes:
@@ -181,6 +188,12 @@ def initialize_dynamics(rng, hyperedges, configuration):
 """
     Add subfaces attribute to the hypergraph. Effectively computes
     the encapsulation DAG in both directions.
+
+    ToDo: Despite the dynamics being driven from subface --> superface,
+    I am actually not ever using the subfaces themselves, since it is
+    always faster to know the parent. If memory becomes an issue, I can
+    stop storing the subfaces (but leaving for now for completeness/in case
+    they are convenient later).
 """
 def add_subface_attribute(H):
     # Loop over the hyperedges
@@ -297,20 +310,19 @@ def simultaneous_update_step(H, configuration, results_dict, t,
     if t == 1:
         # Store the set of activated edges
         inactive_edge_info["activated_edges"] = set(H.edges.filterby_attr("active", 1))
+
+        # Count the number of active substructures in each inactive edge
         if count_type == "node":
             count_active_nodes(inactive_edge_info, H, edge_index_lookup)
         elif count_type == "subface":
-            print("Starting count of active subfaces...")
             count_active_subfaces(inactive_edge_info, H, edge_index_lookup)
-            print("Done.")
 
         # If down dynamics, compute the threshold
         if configuration["update_name"] == "down":
             inactive_edge_info["thresholds"] = inactive_edge_info["sizes"] - configuration["active_threshold"]
             inactive_edge_info["thresholds"][inactive_edge_info["thresholds"] <= 0] = 1
         elif configuration["update_name"] in ["up", "subface"]:
-            # If up dynamics the threshold is static. This also applies for
-            # count_type subface.
+            # If up dynamics the threshold is static. This also applies for subface.
             inactive_edge_info["thresholds"] = configuration["active_threshold"]
 
 
