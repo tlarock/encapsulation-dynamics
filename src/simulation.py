@@ -14,11 +14,16 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
     num_sims = configuration["num_simulations"]
     print(f"Running {num_sims} simulations of {configuration['steps']} steps on a single cpu.")
     output = dict()
+    output["activated_edge_sizes"] = []
     for i in range(configuration["num_simulations"]):
         if verbose:
             print(f"Running simulation {i}.")
         results = run_simulation(hyperedges, configuration, results_only=True)
         for key, vals_arr in results.items():
+            if key == "activated_edge_sizes":
+                output[key].append(vals_arr)
+                continue
+
             if key not in output:
                 output[key] = vals_arr
             else:
@@ -46,8 +51,13 @@ def run_many_parallel(hyperedges, configuration, ncpus):
         results_list = p.starmap(run_simulation, args)
 
     output = dict()
+    output["activated_edge_sizes"] = []
     for results in results_list:
         for key, vals_arr in results.items():
+            if key == "activated_edge_sizes":
+                output[key].append(vals_arr)
+                continue
+
             if key not in output:
                 output[key] = vals_arr
             else:
@@ -77,7 +87,10 @@ def run_simulation(hyperedges, configuration, results_only=False):
     results_dict = {
         "nodes_activated": np.zeros(T+1),
         "edges_activated": np.zeros(T+1),
-        "activated_edge_sizes": np.zeros(T+1)
+        # this will be a list of lists of activated edge size
+        # distributions to be compatible with both single edge
+        # and simultaneous updates
+        "activated_edge_sizes": []
     }
 
     # Store the number of initially active nodes
@@ -384,6 +397,7 @@ def simultaneous_update_step(H, configuration, results_dict, t,
     edge_indices_to_activate = (inactive_edge_info["active_counts"] >= inactive_edge_info["thresholds"]).nonzero()[0]
 
     # Activate the edges
+    results_dict["activated_edge_sizes"].append([])
     newly_active_nodes = set()
     for edge_index in edge_indices_to_activate:
         edge_id = inactive_edge_info["edges"][edge_index]
@@ -394,7 +408,7 @@ def simultaneous_update_step(H, configuration, results_dict, t,
         results_dict["nodes_activated"][t] += len(new_activations)
         # ToDo FixMe: This is wrong for simultaneous update. Need to
         # make it list-like.
-        results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
+        results_dict["activated_edge_sizes"][-1].append(float(len(H.edges.members(edge_id))))
 
     # Update the relevant activated counts
     if count_type == "node":
@@ -438,11 +452,12 @@ def single_edge_step(H, configuration, results_dict, t, rng, inactive_edge_info)
     activate = configuration["update_function"](H, edge_id, configuration, t)
 
     # If the edge was activated in this timestep, update the time series
+    results_dict["activated_edge_sizes"].append([])
     if edge_active_before == 0 and activate:
         H, new_activations = activate_edge(H, edge_id, t)
         results_dict["edges_activated"][t] = 1.0
         results_dict["nodes_activated"][t] = len(new_activations)
-        results_dict["activated_edge_sizes"][t] = float(len(H.edges.members(edge_id)))
+        results_dict["activated_edge_sizes"][-1].append(float(len(H.edges.members(edge_id))))
 
         # Remove edge from inactive_edge_info["edges"] list by swapping with the final
         # element, then popping the list
