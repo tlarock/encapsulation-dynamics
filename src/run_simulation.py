@@ -17,7 +17,8 @@ from update_rules import *
 UPDATE_FUNCT_MAP = {
     "up": absolute_update_up,
     "down": absolute_update_down,
-    "subface": None
+    "subface": None,
+    "subface-strict": None
 }
 
 from selection_rules import *

@@ -125,8 +125,8 @@ def run_simulation(hyperedges, configuration, results_only=False):
         if configuration["selection_name"] == "simultaneous":
             if configuration["update_name"] in ["up", "down"]:
                 simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "node")
-            elif configuration["update_name"] == "subface":
-                simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "subface")
+            elif configuration["update_name"] in ["subface", "subface-strict"]:
+                simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, configuration["update_name"])
 
             if results_dict["edges_activated"][t] < 1:
                 # If no edge was activated this step, the simulation can stop
@@ -158,7 +158,7 @@ def initialize_dynamics(rng, hyperedges, configuration):
 
     # For subface simulations, need to
     # compute encapsulation relationships
-    if configuration["update_name"] == "subface":
+    if configuration["update_name"] in ["subface", "subface-strict"]:
         add_subface_attribute(H, dag_type="super")
 
     # Give nodes default attributes
@@ -382,13 +382,16 @@ def simultaneous_update_step(H, configuration, results_dict, t,
         if count_type == "node":
             count_active_nodes(H, inactive_edge_info, edge_index_lookup)
         elif count_type == "subface":
-            count_active_subfaces(H, inactive_edge_info, edge_index_lookup)
+            count_active_subfaces(H, inactive_edge_info, edge_index_lookup, nodes_as_subfaces=True)
+        elif count_type == "subface-strict":
+            count_active_subfaces(H, inactive_edge_info, edge_index_lookup, nodes_as_subfaces=False)
+
 
         # If down dynamics, compute the threshold
         if configuration["update_name"] == "down":
             inactive_edge_info["thresholds"] = inactive_edge_info["sizes"] - configuration["active_threshold"]
             inactive_edge_info["thresholds"][inactive_edge_info["thresholds"] <= 0] = 1
-        elif configuration["update_name"] in ["up", "subface"]:
+        elif configuration["update_name"] in ["up", "subface", "subface-strict"]:
             # If up dynamics the threshold is static. This also applies for subface.
             inactive_edge_info["thresholds"] = configuration["active_threshold"]
 
@@ -420,7 +423,16 @@ def simultaneous_update_step(H, configuration, results_dict, t,
         update_active_subface_counts(H,
                                      inactive_edge_info,
                                      edge_indices_to_activate,
-                                     newly_active_nodes, edge_index_lookup)
+                                     newly_active_nodes,
+                                     edge_index_lookup,
+                                     nodes_as_subfaces=True)
+    elif count_type == "subface-strict":
+        update_active_subface_counts(H,
+                                     inactive_edge_info,
+                                     edge_indices_to_activate,
+                                     newly_active_nodes,
+                                     edge_index_lookup,
+                                     nodes_as_subfaces=False)
 
     # Remove the relevant indices from the numpy arrays
     inactive_edge_info["edges"] = np.delete(inactive_edge_info["edges"], edge_indices_to_activate)
