@@ -102,28 +102,29 @@ def dag_components(rng, H, configuration):
     while len(activated_edges) < configuration["initial_active"]:
         # for each component
         for c in components:
+            cset = set(c)
             # Remove already activated edges from c
-            c -= activated_edges
-            if len(c) == 0:
+            cset -= activated_edges
+            if len(cset) == 0:
                 # If all of c's edges have already been added, skip
                 continue
 
             # Convert c to a list
-            c = list(c)
-            if len(c) == 1:
+            clist = list(cset)
+            if len(clist) == 1:
                 # If the component is a single edge, add it
-                activated_edges.add(c[0])
+                activated_edges.add(clist[0])
+                continue
 
             # Get the inverse edge sizes in component c as probability
-            inverse_sizes = 1.0 / np.array([len(H.edges.members(edge_id)) for edge_id in c])
+            inverse_sizes = 1.0 / np.array([len(H.edges.members(edge_id)) for
+                                            edge_id in clist])
             inverse_sizes /= inverse_sizes.sum()
 
             # Choose an edge that has not been chosen yet
-            edge = rng.choice(c, p=inverse_sizes)
-            while edge in activated_edges:
-                edge = rng.choice(c, p=inverse_sizes)
-
+            edge = rng.choice(clist, p=inverse_sizes)
             activated_edges.add(edge)
+
             if len(activated_edges) == configuration["initial_active"]:
                 break
 
