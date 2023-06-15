@@ -3,23 +3,23 @@ import numpy as np
 
 ### FUNCTIONS FOR NODE SEEDS ###
 """
-    Randomly choose num_seeds nodes from all nodes participating
+    Randomly choose initial_active nodes from all nodes participating
     in 2-node edges.
 """
 def twonode_seed(rng, H, configuration):
-    num_seeds = configuration["initial_active"]
+    initial_active = configuration["initial_active"]
     activated_nodes_arr = rng.choice(list(set([node for eid in H.edges
                              for node in H.edges.members(eid)
-                             if len(H.edges.members(eid)) == 2])), replace=False, size = num_seeds)
+                             if len(H.edges.members(eid)) == 2])), replace=False, size = initial_active)
     return activated_nodes_arr.tolist()
 
 
 """
-    Randomly choose num_seeds nodes with probability proportional to the
+    Randomly choose initial_active nodes with probability proportional to the
     average size of the hyperedges the node participates in.
 """
 def biased_seed(rng, H, configuration, inverse=False):
-    num_seeds = configuration["initial_active"]
+    initial_active = configuration["initial_active"]
     p = []
     for node in H.nodes:
         avg = np.mean([len(H.edges.members(eid)) for eid in H.nodes.memberships(node)])
@@ -29,7 +29,7 @@ def biased_seed(rng, H, configuration, inverse=False):
 
     p = np.array(p)
     p /= p.sum()
-    activated_nodes_arr = rng.choice(list(H.nodes), p=p, replace=False, size=num_seeds)
+    activated_nodes_arr = rng.choice(list(H.nodes), p=p, replace=False, size=initial_active)
     return activated_nodes_arr.tolist()
 
 """
@@ -40,17 +40,17 @@ def inverse_biased_seed(rng, H, configuration):
 
 
 """
-    Randomly choose num_seeds nodes with probability proportional to
+    Randomly choose initial_active nodes with probability proportional to
     the hyperdegree of the node (number of hyperedges the node
     participates in).
 """
 def degree_biased_seed(rng, H, configuration, inverse=False):
-    num_seeds = configuration["initial_active"]
+    initial_active = configuration["initial_active"]
     p = np.array([float(H.nodes.degree[node]) for node in H.nodes])
     if inverse:
         p = 1.0 / p
     p /= p.sum()
-    activated_nodes_arr = rng.choice(list(H.nodes), p=p, replace=False, size=num_seeds)
+    activated_nodes_arr = rng.choice(list(H.nodes), p=p, replace=False, size=initial_active)
     return activated_nodes_arr.tolist()
 
 """
@@ -61,16 +61,16 @@ def inverse_degree_biased(rng, H, configuration):
 
 ### FUNCTIONS FOR EDGE SEEDS ###
 """
-    Randomly choose num_seeds edges with probability proportional to the
+    Randomly choose initial_active edges with probability proportional to the
     size of the edge.
 """
 def size_biased_seed(rng, H, configuration, inverse=False):
-    num_seeds = configuration["initial_active"]
+    initial_active = configuration["initial_active"]
     p = np.array([float(len(H.edges.members(edge_id))) for edge_id in H.edges])
     if inverse:
         p = 1.0 / p
     p /= p.sum()
-    activated_edges_arr = rng.choice(list(H.edges), p=p, replace=False, size=num_seeds)
+    activated_edges_arr = rng.choice(list(H.edges), p=p, replace=False, size=initial_active)
     return activated_edges_arr.tolist()
 
 """
@@ -78,3 +78,32 @@ def size_biased_seed(rng, H, configuration, inverse=False):
 """
 def inverse_size_biased(rng, H, configuration):
     return size_biased_seed(rng, H, configuration, inverse=True)
+
+
+"""
+    Randomly choose 1 minimum-sized edge from each DAG connected component
+    until initial_active is exhausted.
+
+"""
+def dag_components(rng, H, configuration):
+    import networkx as nx
+    dag = nx.DiGraph()
+    # Compute the DAG and its components
+    for edge_id in H.edges:
+        dag.add_node(edge_id)
+        for sup_id in H.edges[edge_id]["superfaces"]:
+            dag.add_edge(sup_id, edge_id)
+    components = nx.weakly_connected_components(dag)
+    activated_edges = []
+    # for each component
+    for c in components:
+        # Get the edge sizes in that component
+        sizes = [len(H.edges.members(edge_id)) for edge_id in c]
+        min_size = min(sizes)
+        # choose a small edge
+        activated_edges.append(rng.choice([edge_id for idx, edge_id in enumerate(c)
+                                           if sizes[idx] == min_size]))
+        if len(activated_edges) == configuration["initial_active"]:
+            break
+
+    return activated_edges

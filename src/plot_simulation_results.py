@@ -138,7 +138,7 @@ def plot_cumulative_averages(output_obs, output_rnd, num_steps=0,
     Plot average cumulative activations of nodes/edges over multiple
     simulations based on a dictionary with many simulation results.
 """
-def plot_cumulative_fromdict(configuration, outputs):
+def plot_cumulative_fromdict(configuration, outputs, legend=True):
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7,3), squeeze=False)
     fig.subplots_adjust(wspace=0.3)
 
@@ -152,5 +152,6 @@ def plot_cumulative_fromdict(configuration, outputs):
             axs[0][col_idx].fill_between(x, mean-std, mean+std, alpha=0.15)
 
         axs[0][col_idx].set(xlabel="Time", ylabel=labels[col_idx])
-    axs[0][0].legend()
+    if legend:
+        axs[0][0].legend()
     return fig, axs

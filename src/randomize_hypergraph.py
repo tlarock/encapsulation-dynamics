@@ -63,6 +63,7 @@ if randomization_num < 0:
     hypergraph_idx = 0
 else:
     if not multiedges:
+        print(f"Reading: {datadir + '/randomizations/random-simple-{}.txt'.format(randomization_num)}")
         input_file = datadir + "/randomizations/random-simple-{}.txt"
     else:
         input_file = datadir + "/randomizations/random-{}.txt"

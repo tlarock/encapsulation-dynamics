@@ -41,7 +41,7 @@ random_path = f"../data/{dataset_name}/randomizations/"
 num_samples = 5
 
 print("Reading hyperedges...")
-hyperedges = read_data(filename)
+hyperedges = read_data(filename, multiedges=False)
 #hyperedges = read_hyperedges(filename)
 print("Done.")
 

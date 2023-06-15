@@ -40,7 +40,8 @@ SEED_FUNCT_MAP = {
     "degree_biased": degree_biased_seed,
     "inverse_degree": inverse_degree_biased,
     "size_biased": size_biased_seed,
-    "inverse_size": inverse_size_biased
+    "inverse_size": inverse_size_biased,
+    "dag_components": dag_components
 }
 
 from simulation import *
