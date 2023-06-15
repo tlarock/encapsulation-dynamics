@@ -93,17 +93,38 @@ def dag_components(rng, H, configuration):
         dag.add_node(edge_id)
         for sup_id in H.edges[edge_id]["superfaces"]:
             dag.add_edge(sup_id, edge_id)
-    components = nx.weakly_connected_components(dag)
-    activated_edges = []
-    # for each component
-    for c in components:
-        # Get the edge sizes in that component
-        sizes = [len(H.edges.members(edge_id)) for edge_id in c]
-        min_size = min(sizes)
-        # choose a small edge
-        activated_edges.append(rng.choice([edge_id for idx, edge_id in enumerate(c)
-                                           if sizes[idx] == min_size]))
-        if len(activated_edges) == configuration["initial_active"]:
-            break
+    components = list(nx.weakly_connected_components(dag))
 
-    return activated_edges
+    # Randomly choose a set of edges to activate by choosing 1 edge at a time
+    # from each connected component, with a bias inversely proportional to the
+    # size of the hyperedge
+    activated_edges = set()
+    while len(activated_edges) < configuration["initial_active"]:
+        # for each component
+        for c in components:
+            # Remove already activated edges from c
+            c -= activated_edges
+            if len(c) == 0:
+                # If all of c's edges have already been added, skip
+                continue
+
+            # Convert c to a list
+            c = list(c)
+            if len(c) == 1:
+                # If the component is a single edge, add it
+                activated_edges.add(c[0])
+
+            # Get the inverse edge sizes in component c as probability
+            inverse_sizes = 1.0 / np.array([len(H.edges.members(edge_id)) for edge_id in c])
+            inverse_sizes /= inverse_sizes.sum()
+
+            # Choose an edge that has not been chosen yet
+            edge = rng.choice(c, p=inverse_sizes)
+            while edge in activated_edges:
+                edge = rng.choice(c, p=inverse_sizes)
+
+            activated_edges.add(edge)
+            if len(activated_edges) == configuration["initial_active"]:
+                break
+
+    return list(activated_edges)
