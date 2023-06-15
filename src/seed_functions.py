@@ -93,7 +93,9 @@ def dag_components(rng, H, configuration):
         dag.add_node(edge_id)
         for sup_id in H.edges[edge_id]["superfaces"]:
             dag.add_edge(sup_id, edge_id)
-    components = list(nx.weakly_connected_components(dag))
+
+    components_sets = list(nx.weakly_connected_components(dag))
+    components_lists = [list(c) for c in components_sets]
 
     # Randomly choose a set of edges to activate by choosing 1 edge at a time
     # from each connected component, with a bias inversely proportional to the
@@ -101,20 +103,24 @@ def dag_components(rng, H, configuration):
     activated_edges = set()
     while len(activated_edges) < configuration["initial_active"]:
         # for each component
-        for c in components:
-            cset = set(c)
+        for i in range(len(components_lists)):
+            cset = components_sets[i]
             # Remove already activated edges from c
             cset -= activated_edges
             if len(cset) == 0:
                 # If all of c's edges have already been added, skip
                 continue
 
-            # Convert c to a list
-            clist = list(cset)
-            if len(clist) == 1:
+            if len(cset) == 1:
                 # If the component is a single edge, add it
-                activated_edges.add(clist[0])
+                activated_edges.add(next(iter(cset)))
                 continue
+
+            # Convert c to a list
+            clist = components_lists[i]
+            if len(cset) != len(clist):
+                clist = list(cset)
+                components_lists[i] = clist
 
             # Get the inverse edge sizes in component c as probability
             inverse_sizes = 1.0 / np.array([len(H.edges.members(edge_id)) for
