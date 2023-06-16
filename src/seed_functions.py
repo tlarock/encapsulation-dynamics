@@ -104,6 +104,7 @@ def dag_components(rng, H, configuration):
     # size of the hyperedge
     activated_edges = set()
     while len(activated_edges) < configuration["initial_active"]:
+        components_to_delete = set()
         # for each component
         for i in range(len(components_lists)):
             # Get the inverse edge sizes in component c
@@ -113,20 +114,38 @@ def dag_components(rng, H, configuration):
             # component already, so we can safely skip it
             if sum(inverse_sizes) == 0:
                 # If all of c's edges have already been added, skip
+                components_to_delete.add(i)
                 continue
 
             # Get the edges in the component as a list
             clist = components_lists[i]
 
-            # Choose an edge that has not been chosen yet
-            index = rng.choice(list(range(len(clist))), p = inverse_sizes / inverse_sizes.sum())
+            if len(components_lists) > 1:
+                # Choose an edge that has not been chosen yet
+                index = rng.choice(list(range(len(clist))), p = inverse_sizes / inverse_sizes.sum())
 
-            # Add to activation set
-            activated_edges.add(clist[index])
+                # Add to activation set
+                activated_edges.add(clist[index])
 
-            # Set the size to 0 so it will not be picked again
-            inverse_sizes[index] = 0.0
+                # Set the size to 0 so it will not be picked again
+                inverse_sizes[index] = 0.0
+            else:
+                # Just pick the rest of the edges from this component in one shot
+                # Choose an edge that has not been chosen yet
+                indices = rng.choice(list(range(len(clist))), p = inverse_sizes
+                                     / inverse_sizes.sum(), replace=False,
+                                     size=configuration["initial_active"]-len(activated_edges))
+                for index in indices:
+                    # Add to activation set
+                    activated_edges.add(clist[index])
+
+                    # Set the size to 0 so it will not be picked again
+                    inverse_sizes[index] = 0.0
+
             if len(activated_edges) == configuration["initial_active"]:
                 break
+
+        components_lists = [c for i, c in enumerate(components_lists) if i not in components_to_delete]
+        components_sizes = [c for i, c in enumerate(components_sizes) if i not in components_to_delete]
 
     return list(activated_edges)
