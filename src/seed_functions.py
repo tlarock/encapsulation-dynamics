@@ -94,8 +94,10 @@ def dag_components(rng, H, configuration):
         for sup_id in H.edges[edge_id]["superfaces"]:
             dag.add_edge(sup_id, edge_id)
 
-    components_sets = list(nx.weakly_connected_components(dag))
-    components_lists = [list(c) for c in components_sets]
+    components_lists = [list(c) for c in nx.weakly_connected_components(dag)]
+    components_sizes = [np.array([1.0 / len(H.edges.members(edge_id)) for
+                                  edge_id in c])
+                        for c in components_lists]
 
     # Randomly choose a set of edges to activate by choosing 1 edge at a time
     # from each connected component, with a bias inversely proportional to the
@@ -104,35 +106,27 @@ def dag_components(rng, H, configuration):
     while len(activated_edges) < configuration["initial_active"]:
         # for each component
         for i in range(len(components_lists)):
-            cset = components_sets[i]
-            # Remove already activated edges from c
-            cset -= activated_edges
-            if len(cset) == 0:
+            # Get the inverse edge sizes in component c
+            inverse_sizes = components_sizes[i]
+
+            # If all edge sizes are 0, we have activated all edges in this
+            # component already, so we can safely skip it
+            if sum(inverse_sizes) == 0:
                 # If all of c's edges have already been added, skip
                 continue
 
-            if len(cset) == 1:
-                # If the component is a single edge, add it
-                activated_edges.add(next(iter(cset)))
-                if len(activated_edges) == configuration["initial_active"]:
-                    break
-                else:
-                    continue
-
-            # Convert c to a list
+            # Get the edges in the component as a list
             clist = components_lists[i]
-            if len(cset) != len(clist):
-                components_lists[i] = list(cset)
-                clist = components_lists[i]
-
-            # Get the inverse edge sizes in component c as probability
-            inverse_sizes = 1.0 / np.array([len(H.edges.members(edge_id)) for
-                                            edge_id in clist])
-            inverse_sizes /= inverse_sizes.sum()
 
             # Choose an edge that has not been chosen yet
-            edge = rng.choice(clist, p=inverse_sizes)
-            activated_edges.add(edge)
+            index = rng.choice(list(range(len(clist))), p = inverse_sizes / inverse_sizes.sum())
+
+            # Add to activation set
+            activated_edges.add(clist[index])
+
+            # Set the size to 0 so it will not be picked again
+            inverse_sizes[index] = 0.0
             if len(activated_edges) == configuration["initial_active"]:
                 break
+
     return list(activated_edges)
