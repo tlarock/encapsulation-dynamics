@@ -193,9 +193,10 @@ if __name__ == "__main__":
           {initial_active}\nThreshold: {configuration['active_threshold']}")
 
     if ncpus > 1:
-        output = run_many_parallel(hyperedges, configuration, ncpus)
+        output = run_many_parallel(hyperedges, configuration, ncpus,
+                                   verbose=True)
     else:
-        output = run_many_simulations(hyperedges, configuration)
+        output = run_many_simulations(hyperedges, configuration, verbose=True)
 
     # Output data
     output_filename = results_path

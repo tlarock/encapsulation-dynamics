@@ -12,7 +12,8 @@ from encapsulation_dag import is_encapsulated
 def run_many_simulations(hyperedges, configuration, verbose=False):
     np.random.seed()
     num_sims = configuration["num_simulations"]
-    print(f"Running {num_sims} simulations of {configuration['steps']} steps on a single cpu.")
+    if verbose:
+        print(f"Running {num_sims} simulations of {configuration['steps']} steps on a single cpu.")
     output = dict()
     output["activated_edge_sizes"] = []
     for i in range(configuration["num_simulations"]):
@@ -40,9 +41,10 @@ def run_many_simulations(hyperedges, configuration, verbose=False):
     on hyperedges using settings in configuration. Returns a dictionary
     with matrices of results for node and edge activation.
 """
-def run_many_parallel(hyperedges, configuration, ncpus):
+def run_many_parallel(hyperedges, configuration, ncpus, verbose=False):
     num_sims = configuration["num_simulations"]
-    print(f"Running {num_sims} simulations of {configuration['steps']} steps on {ncpus} cpus.")
+    if verbose:
+        print(f"Running {num_sims} simulations of {configuration['steps']} steps on {ncpus} cpus.")
     args = []
     for i in range(num_sims):
         args.append((hyperedges, configuration, True))
