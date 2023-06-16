@@ -120,6 +120,7 @@ def dag_components(rng, H, configuration):
             # Get the edges in the component as a list
             clist = components_lists[i]
 
+            # General case is when there are multiple components
             if len(components_lists) > 1:
                 # Choose an edge that has not been chosen yet
                 index = rng.choice(list(range(len(clist))), p = inverse_sizes / inverse_sizes.sum())
@@ -130,8 +131,8 @@ def dag_components(rng, H, configuration):
                 # Set the size to 0 so it will not be picked again
                 inverse_sizes[index] = 0.0
             else:
+                # Special case when there is only one component left
                 # Just pick the rest of the edges from this component in one shot
-                # Choose an edge that has not been chosen yet
                 indices = rng.choice(list(range(len(clist))), p = inverse_sizes
                                      / inverse_sizes.sum(), replace=False,
                                      size=configuration["initial_active"]-len(activated_edges))
