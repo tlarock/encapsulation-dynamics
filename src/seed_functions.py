@@ -122,8 +122,8 @@ def dag_components(rng, H, configuration):
             # Convert c to a list
             clist = components_lists[i]
             if len(cset) != len(clist):
-                clist = list(cset)
-                components_lists[i] = clist
+                components_lists[i] = list(cset)
+                clist = components_lists[i]
 
             # Get the inverse edge sizes in component c as probability
             inverse_sizes = 1.0 / np.array([len(H.edges.members(edge_id)) for
