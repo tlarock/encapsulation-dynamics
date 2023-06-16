@@ -114,7 +114,10 @@ def dag_components(rng, H, configuration):
             if len(cset) == 1:
                 # If the component is a single edge, add it
                 activated_edges.add(next(iter(cset)))
-                continue
+                if len(activated_edges) == configuration["initial_active"]:
+                    break
+                else:
+                    continue
 
             # Convert c to a list
             clist = components_lists[i]
@@ -130,8 +133,6 @@ def dag_components(rng, H, configuration):
             # Choose an edge that has not been chosen yet
             edge = rng.choice(clist, p=inverse_sizes)
             activated_edges.add(edge)
-
             if len(activated_edges) == configuration["initial_active"]:
                 break
-
     return list(activated_edges)
