@@ -94,10 +94,11 @@ def dag_components(rng, H, configuration):
         for sup_id in H.edges[edge_id]["superfaces"]:
             dag.add_edge(sup_id, edge_id)
 
-    components_lists = [list(c) for c in nx.weakly_connected_components(dag)]
+    components_lists = [list(c) for c in sorted(nx.weakly_connected_components(dag),
+                            key=lambda k: len(k),
+                            reverse=True)]
     components_sizes = [np.array([1.0 / len(H.edges.members(edge_id)) for
-                                  edge_id in c])
-                        for c in components_lists]
+                                  edge_id in c]) for c in components_lists]
 
     # Randomly choose a set of edges to activate by choosing 1 edge at a time
     # from each connected component, with a bias inversely proportional to the
@@ -130,6 +131,86 @@ def dag_components(rng, H, configuration):
 
                 # Set the size to 0 so it will not be picked again
                 inverse_sizes[index] = 0.0
+            else:
+                # Special case when there is only one component left
+                # Just pick the rest of the edges from this component in one shot
+                indices = rng.choice(list(range(len(clist))), p = inverse_sizes
+                                     / inverse_sizes.sum(), replace=False,
+                                     size=configuration["initial_active"]-len(activated_edges))
+                for index in indices:
+                    # Add to activation set
+                    activated_edges.add(clist[index])
+
+                    # Set the size to 0 so it will not be picked again
+                    inverse_sizes[index] = 0.0
+
+            if len(activated_edges) == configuration["initial_active"]:
+                break
+
+        components_lists = [c for i, c in enumerate(components_lists) if i not in components_to_delete]
+        components_sizes = [c for i, c in enumerate(components_sizes) if i not in components_to_delete]
+
+    return list(activated_edges)
+
+
+"""
+    Randomly choose edges from components in decreasing size order
+    until initial_active is exhausted.
+
+"""
+def dag_largest_component(rng, H, configuration):
+    import networkx as nx
+    dag = nx.DiGraph()
+    # Compute the DAG and its components
+    for edge_id in H.edges:
+        dag.add_node(edge_id)
+        for sup_id in H.edges[edge_id]["superfaces"]:
+            dag.add_edge(sup_id, edge_id)
+
+    components_lists = [list(c) for c in sorted(nx.weakly_connected_components(dag),
+                            key=lambda k: len(k),
+                            reverse=True)]
+    components_sizes = [np.array([1.0 / len(H.edges.members(edge_id)) for
+                                  edge_id in c])
+                        for c in components_lists]
+
+    # Randomly choose a set of edges to activate by choosing 1 edge at a time
+    # from each connected component, with a bias inversely proportional to the
+    # size of the hyperedge
+    activated_edges = set()
+    while len(activated_edges) < configuration["initial_active"]:
+        components_to_delete = set()
+        # for each component
+        for i in range(len(components_lists)):
+            # Get the inverse edge sizes in component c
+            inverse_sizes = components_sizes[i]
+
+            # If all edge sizes are 0, we have activated all edges in this
+            # component already, so we can safely skip it
+            if sum(inverse_sizes) == 0:
+                # If all of c's edges have already been added, skip
+                components_to_delete.add(i)
+                continue
+
+            # Get the edges in the component as a list
+            clist = components_lists[i]
+
+            # General case is when there are multiple components
+            if len(components_lists) > 1:
+                seeds_remaining = configuration["initial_active"] - len(activated_edges)
+                if len(clist) > seeds_remaining:
+                    # Get a sample
+                    indices = rng.choice(list(range(len(clist))), p = inverse_sizes / inverse_sizes.sum(), size=seeds_remaining)
+                else:
+                    # All edges can be added
+                    indices = list(range(len(clist)))
+
+                for index in indices:
+                    # Add to activation set
+                    activated_edges.add(clist[index])
+
+                    # Set the size to 0 so it will not be picked again
+                    inverse_sizes[index] = 0.0
             else:
                 # Special case when there is only one component left
                 # Just pick the rest of the edges from this component in one shot
