@@ -148,7 +148,7 @@ def get_overlap_dists(dag, max_n=float('inf'), max_m=float('inf'),
             if not binomial_norm:
                 overlap[n][m].append(he_overlap[m])
             elif not in_neighbors:
-                overlap[n][m].append(he_overlap[m] / math.comb(n, m))
+                overlap[n][m].append(he_overlap[m] / (math.comb(n, m) + m))
             else:
                 overlap[n][m].append(he_overlap[m] / math.comb(dag.number_of_nodes()-n, m-n))
 
@@ -209,7 +209,7 @@ def overlap_dag(hyperedges):
     nth (dict): dictionary mapping nodes to ids of hyperedges they are members of
     he_map (dict): dictionary mapping hyperedge id to hyperedge
 """
-def overlap_graph(hyperedges):
+def overlap_graph(hyperedges, normalize_weight=True):
     # Compute node to hyperedges
     nth, he_map = nodes_to_hyperedges(hyperedges)
     rev_map = {val:key for key,val in he_map.items()}
@@ -230,7 +230,9 @@ def overlap_graph(hyperedges):
             cand_idx = he_map[cand]
 
             if not G.has_edge(he, cand):
-                w = len(set(he).intersection(set(cand))) / min([len(cand), len(he)])
+                w = len(set(he).intersection(set(cand)))
+                if normalize_weight:
+                    w /= min([len(cand), len(he)])
                 G.add_edge(he, cand, weight=w)
 
     return G, nth, he_map

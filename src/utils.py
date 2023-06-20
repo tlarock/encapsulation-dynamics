@@ -32,10 +32,10 @@ def read_data(path, t_min = None, t_max = None, multiedges=True):
     # format as list of lists
 
     l = np.split(simplices, np.cumsum(nverts))
-    C = [tuple(c) for c in l if len(c) > 0]
+    C = [tuple(sorted(c)) for c in l if len(c) > 0]
     if not multiedges:
         C_set = set([tuple(c) for c in C])
-        C = [tuple(c) for c in C_set]
+        C = [tuple(sorted(c)) for c in C_set]
 
     return(C)
 
@@ -60,7 +60,7 @@ def read_hyperedges(filename):
     with open(filename, "r") as fin:
         for line in fin:
             s = list(map(int, line.strip().split(',')))
-            hyperedges.append(tuple(s))
+            hyperedges.append(tuple(sorted(s)))
     return hyperedges
 
 """
