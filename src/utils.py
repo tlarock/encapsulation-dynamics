@@ -34,7 +34,7 @@ def read_data(path, t_min = None, t_max = None, multiedges=True):
     l = np.split(simplices, np.cumsum(nverts))
     C = [tuple(sorted(c)) for c in l if len(c) > 0]
     if not multiedges:
-        C_set = set([tuple(c) for c in C])
+        C_set = set([tuple(sorted(c)) for c in C])
         C = [tuple(sorted(c)) for c in C_set]
 
     return(C)
