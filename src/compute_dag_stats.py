@@ -4,11 +4,11 @@ import networkx as nx
 import numpy as np
 from collections import Counter
 sys.path.append("../src/")
-from utils import read_data, read_random_hyperedges
+from utils import read_data
 from encapsulation_dag import *
 sys.path.append("../../hypergraph/")
 from hypergraph import hypergraph
-
+from layer_randomization import layer_randomization
 sys.path.append("../../tr-dag-cycles/")
 from cycle_utilities import tr
 
@@ -28,78 +28,40 @@ def compute_dag_heights(dag):
 
 data_dir = "../data/"
 dataset = sys.argv[1]
-parallel_edges = False
-read_dags = False
-num_randomizations = 50
+num_samples = 10
 
 observed_path = data_dir + dataset + "/" + dataset + "-"
-if not read_dags:
-    L = read_data(observed_path)
-    G = hypergraph(L)
-    obs_dag, obs_nth, obs_he_map = encapsulation_dag(G.C)
-    write_dag(obs_dag, observed_path + "DAG.txt")
-else:
-    obs_dag = read_dag(observed_path + "DAG.txt")
+print("Reading hyperedges.")
+hyperedges = read_data(observed_path, multiedges=False)
+
+print("Computing observed dag.")
+obs_dag, obs_nth, obs_he_map = encapsulation_dag(hyperedges)
 
 print(f"Dag edges: {obs_dag.number_of_edges()}")
 
-# Get overlap dists from observed dag
-overlap_dists = get_overlap_dists(obs_dag, binomial_norm=True)
 # Observed
 dag = obs_dag
+print("Computing observed dag heights.")
 heights = compute_dag_heights(dag.copy())
 height_output_file = data_dir + dataset + f"/{dataset}_dag_heights.txt"
 with open(height_output_file, "w") as fout:
     fout.write(",".join(map(str,heights)))
+print(f"Observed dag average height: {np.mean(heights)}")
 
-if not parallel_edges:
-    data_path = data_dir + dataset + "/randomizations/random-simple-"
-else:
-    data_path = data_dir + dataset + "/randomizations/random-"
-
-
-dag_edges_dist = []
-n_range = [5, 4, 3, 2]
-dag_overlap_dists = dict()
-for n in n_range:
-    dag_overlap_dists[n] = dict()
-    for m in overlap_dists[n]:
-        dag_overlap_dists[n][m] = np.zeros((num_randomizations, math.comb(n,m)))
-
-for i in range(0, num_randomizations):
-    print(i)
-    if read_dags:
-        dag_input_file = data_path + f"{i}_dag.txt"
-        dag = read_dag(dag_input_file)
-    else:
-        random_hyperedges = read_random_hyperedges(data_path + f"{i}.txt")
-        dag, nth, he_map = encapsulation_dag(random_hyperedges)
-        output_file = data_path + f"{i}_dag.txt"
-        write_dag(dag, output_file)
-
-    dag_edges_dist.append(dag.number_of_edges())
-    curr_od = get_overlap_dists(dag, binomial_norm=True)
-    for n in n_range:
-        for m in range(n-1, 0, -1):
-            if n in curr_od and m in curr_od[n]:
-                d = dict(Counter(curr_od[n][m]))
-                dkeys = sorted(d.keys())
-                for idx in range(len(dkeys)):
-                    dag_overlap_dists[n][m][i, idx] = d[dkeys[idx]]
-
+# Random
+heights = []
+for _ in range(num_samples):
+    print("Computing layer randomization.")
+    random_hyperedges = layer_randomization(hyperedges)
     #### Heights ####
-    heights = compute_dag_heights(dag.copy())
-    height_output_file = data_path + f"{i}_dag_heights.txt"
-    with open(height_output_file, "w") as fout:
-        fout.write(",".join(map(str,heights)))
+    print("Computing random dag.")
+    dag, _, _ = encapsulation_dag(random_hyperedges)
+    print(f"Random dag has {dag.number_of_edges()} edges.")
+    print("Computing random dag heights.")
+    heights.append(compute_dag_heights(dag.copy()))
+    print(f"Random dag average height: {np.mean(heights[-1])}")
 
-
-print(f"Mean: {np.mean(dag_edges_dist)} +/- {np.std(dag_edges_dist)}")
-if not parallel_edges:
-    outfile = data_dir + dataset + "/randomizations/random-simple_overlaps.pickle"
-else:
-    outfile = data_dir + dataset + "/randomizations/random_overlaps.pickle"
-
-with open(outfile, "wb") as fpickle:
-        pickle.dump(dag_overlap_dists, fpickle)
-print("Dumped dag_overlap_dists")
+height_output_file = data_dir + dataset + f"/{dataset}_layer_randomization_dag_heights.txt"
+with open(height_output_file, "w") as fout:
+    for sample_heights in heights:
+        fout.write(",".join(map(str,sample_heights)) + "\n")
