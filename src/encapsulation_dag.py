@@ -104,13 +104,14 @@ def read_dag(input_file):
     return dag
 
 
-def get_overlap_dists(dag, max_n=float('inf'), max_m=float('inf'),
-                      binomial_norm=False, in_neighbors=False):
-    """
+"""
     Compute the number of m-size hyperedges encapsulated
     by each n-size hyperedge and return the distribution
     for each (m,n) pair.
-    """
+"""
+def get_overlap_dists(dag, max_n=float('inf'), max_m=float('inf'),
+                      binomial_norm=False, in_neighbors=False,
+                      single_node_correction=False):
     overlap = dict()
     he_overlap = dict()
     # For each hyperedge
@@ -148,7 +149,10 @@ def get_overlap_dists(dag, max_n=float('inf'), max_m=float('inf'),
             if not binomial_norm:
                 overlap[n][m].append(he_overlap[m])
             elif not in_neighbors:
-                overlap[n][m].append(he_overlap[m] / (math.comb(n, m) + m))
+                if single_node_correction:
+                    overlap[n][m].append(he_overlap[m] / (math.comb(n, m) + m))
+                else:
+                    overlap[n][m].append(he_overlap[m] / math.comb(n, m))
             else:
                 overlap[n][m].append(he_overlap[m] / math.comb(dag.number_of_nodes()-n, m-n))
 
