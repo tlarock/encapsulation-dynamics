@@ -231,3 +231,30 @@ def dag_largest_component(rng, H, configuration):
         components_sizes = [c for i, c in enumerate(components_sizes) if i not in components_to_delete]
 
     return list(activated_edges)
+
+"""
+    Randomly choose initial_active edges from the smallest to the largest
+"""
+def smallest_first_seed(rng, H, configuration, inverse=False):
+    initial_active = configuration["initial_active"]
+    edges_by_size = dict()
+    for edge_id in H.edges:
+        k = len(H.edges.members(edge_id))
+        if k in edges_by_size:
+            edges_by_size[k].append(edge_id)
+        else:
+            edges_by_size[k] = [edge_id]
+    # Loop in increasing order
+    activated_edges = []
+    for k in sorted(edges_by_size.keys()):
+        # If there are fewer edges in this size than there are activations
+        # remaining
+        if len(edges_by_size[k]) < (initial_active - len(activated_edges)):
+            # add them all
+            activated_edges += edges_by_size[k]
+        else:
+            # Choose remaining randomly from here
+            sample = rng.choice(edges_by_size[k], replace=False, size=initial_active-len(activated_edges)).tolist()
+            activated_edges += sample
+
+    return activated_edges

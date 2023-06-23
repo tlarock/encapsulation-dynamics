@@ -42,7 +42,8 @@ SEED_FUNCT_MAP = {
     "size_biased": size_biased_seed,
     "inverse_size": inverse_size_biased,
     "dag_components": dag_components,
-    "dag_largest_component": dag_largest_component
+    "dag_largest_component": dag_largest_component,
+    "smallest_first": smallest_first_seed
 }
 
 from simulation import *
