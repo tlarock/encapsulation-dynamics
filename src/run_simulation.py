@@ -19,7 +19,8 @@ UPDATE_FUNCT_MAP = {
     "down": absolute_update_down,
     "subface": None,
     "subface-strict": None,
-    "encapsulation-all": None
+    "encapsulation-all": None,
+    "encapsulation-all-strict": None
 }
 
 from selection_rules import *
