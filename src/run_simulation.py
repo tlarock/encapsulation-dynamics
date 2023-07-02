@@ -18,7 +18,8 @@ UPDATE_FUNCT_MAP = {
     "up": absolute_update_up,
     "down": absolute_update_down,
     "subface": None,
-    "subface-strict": None
+    "subface-strict": None,
+    "encapsulation-all": None
 }
 
 from selection_rules import *
@@ -156,10 +157,10 @@ if __name__ == "__main__":
     if largest_cc:
         if not check_hyperedges_connectivity(hyperedges):
             print("Computing largest connected component.")
-            if update_name != "subface-strict":
+            if update_name not in ["subface-strict", "encapsulation-all"]:
                 hyperedges = largest_connected_component(hyperedges, remove_single_nodes=True)
-            elif update_name == "subface-strict":
-                print("subface-strict dynamics specified; not removing single nodes.")
+            else:
+                print(f"{update_name} dynamics specified; not removing single nodes.")
                 hyperedges = largest_connected_component(hyperedges, remove_single_nodes=False)
         else:
             print("Hyperedges already connected. Not computing largest component.")
