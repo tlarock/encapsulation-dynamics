@@ -130,7 +130,8 @@ def run_simulation(hyperedges, configuration, results_only=False):
             elif configuration["update_name"] in ["subface", "subface-strict",
                                                   "encapsulation-all",
                                                   "encapsulation-all-strict",
-                                                  "encapsulation-immediate"]:
+                                                  "encapsulation-immediate",
+                                                  "encapsulation-empirical"]:
                 simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, configuration["update_name"])
 
             if results_dict["edges_activated"][t] < 1:
@@ -165,8 +166,14 @@ def initialize_dynamics(rng, hyperedges, configuration):
     # compute encapsulation relationships
     if configuration["update_name"] in ["subface", "subface-strict"]:
         add_subface_attribute(H, dag_type="super")
-    elif configuration["update_name"] in ["encapsulation-all", "encapsulation-all-strict"]:
+    elif configuration["update_name"] in ["encapsulation-all",
+                                         "encapsulation-all-strict",
+                                         "encapsulation-empirical"]:
         add_subface_attribute(H, dag_type="both")
+
+        if configuration["update_name"] == "encapsulation-empirical":
+            strip_to_empirical_neighbors(H)
+
     elif configuration["update_name"] in ["encapsulation-immediate"]:
         add_subface_attribute(H, dag_type="k-1")
 
@@ -299,6 +306,29 @@ def add_subface_attribute(H, dag_type="both"):
                         else:
                             H.edges[cand_id]["subfaces"] = set([edge_id])
 
+"""
+    Accepts H after add_subface_attribute has been called with "both" type.
+    Removes all super and subfaces except those between a hyperedge and
+    its DAG neighbor that is closest in size.
+"""
+def strip_to_empirical_neighbors(H):
+    # Loop over all edges
+    for edge_id in H.edges:
+        if len(H.edges[edge_id]["superfaces"]) > 0:
+            # Get the maximum superface size
+            min_sup_size = min([len(H.edges.members(sup_id)) for sup_id in
+                                H.edges[edge_id]["superfaces"]])
+            # Keep only the superfaces with that size
+            H.edges[edge_id]["superfaces"] = set([sup_id for sup_id in
+                                                  H.edges[edge_id]["superfaces"] if len(H.edges.members(sup_id)) == min_sup_size])
+
+        # Repeat for subsets
+        if len(H.edges[edge_id]["subfaces"]) > 0:
+            max_sub_size = max([len(H.edges.members(sub_id)) for sub_id in
+                                H.edges[edge_id]["subfaces"]])
+            H.edges[edge_id]["subfaces"] = set([sub_id for sub_id in
+                                                  H.edges[edge_id]["subfaces"] if len(H.edges.members(sub_id)) == max_sub_size])
+
 
 def count_active_subfaces(H,
                           inactive_edge_info,
@@ -415,7 +445,8 @@ def simultaneous_update_step(H, configuration, results_dict, t,
             count_active_nodes(H, inactive_edge_info, edge_index_lookup)
         elif count_type in ["subface", "encapsulation-all"]:
             count_active_subfaces(H, inactive_edge_info, edge_index_lookup, nodes_as_subfaces=True)
-        elif count_type in ["subface-strict", "encapsulation-all-strict", "encapsulation-immediate"]:
+        elif count_type in ["subface-strict", "encapsulation-all-strict",
+                            "encapsulation-immediate", "encapsulation-empirical"]:
             count_active_subfaces(H, inactive_edge_info, edge_index_lookup, nodes_as_subfaces=False)
 
 
@@ -428,7 +459,8 @@ def simultaneous_update_step(H, configuration, results_dict, t,
             inactive_edge_info["thresholds"] = configuration["active_threshold"]
         elif configuration["update_name"] in ["encapsulation-all",
                                               "encapsulation-all-strict",
-                                              "encapsulation-immediate"]:
+                                              "encapsulation-immediate",
+                                              "encapsulation-empirical"]:
             # If encapsulation-all dynamics the threshold is the number of
             # subfaces that exist in the hypergraph
             inactive_edge_info["thresholds"] = np.array([max(1, len(H.edges[edge_id]["subfaces"]))
@@ -466,7 +498,7 @@ def simultaneous_update_step(H, configuration, results_dict, t,
                                      edge_index_lookup,
                                      nodes_as_subfaces=True)
     elif count_type in ["subface-strict", "encapsulation-all-strict",
-                        "encapsulation-immediate"]:
+                        "encapsulation-immediate", "encapsulation-empirical"]:
         update_active_subface_counts(H,
                                      inactive_edge_info,
                                      edge_indices_to_activate,
@@ -480,7 +512,8 @@ def simultaneous_update_step(H, configuration, results_dict, t,
     inactive_edge_info["active_counts"] = np.delete(inactive_edge_info["active_counts"], edge_indices_to_activate)
     if configuration["update_name"] in ["down", "encapsulation-all",
                                         "encapsulation-all-strict",
-                                        "encapsulation-immediate"]:
+                                        "encapsulation-immediate",
+                                        "encapsulation-empirical"]:
         inactive_edge_info["thresholds"] = np.delete(inactive_edge_info["thresholds"], edge_indices_to_activate)
 
 
