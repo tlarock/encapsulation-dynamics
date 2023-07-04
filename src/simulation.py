@@ -164,6 +164,8 @@ def initialize_dynamics(rng, hyperedges, configuration):
         add_subface_attribute(H, dag_type="super")
     elif configuration["update_name"] in ["encapsulation-all", "encapsulation-all-strict"]:
         add_subface_attribute(H, dag_type="both")
+    elif configuration["update_name"] in ["encapsulation-immediate"]:
+        add_subface_attribute(H, dag_type="k-1")
 
     # Give nodes default attributes
     for node in H.nodes:
@@ -211,10 +213,11 @@ def initialize_dynamics(rng, hyperedges, configuration):
     for computing only subfaces or both for potential future use cases.
 """
 def add_subface_attribute(H, dag_type="both"):
-    assert dag_type in ["super", "sub", "both"], f"{dag_type} not a valid option for dag_type."
+    assert dag_type in ["super", "sub", "both", "k-1"], f"{dag_type} not a valid option for dag_type."
 
     sub = False
     sup = False
+    sup_limited = False
     if dag_type == "both":
         sub = True
         sup = True
@@ -222,6 +225,9 @@ def add_subface_attribute(H, dag_type="both"):
         sup = True
     elif dag_type == "sub":
         sub = True
+    elif dag_type == "k-1":
+        sup = True
+        sup_limited = True
 
     # Loop over the hyperedges
     for edge_id in H.edges:
@@ -252,16 +258,27 @@ def add_subface_attribute(H, dag_type="both"):
                 if "superfaces" in H.edges[cand_id] and edge_id in H.edges[cand_id]["superfaces"]:
                     candidates_checked.add(cand_id)
 
+
             # Skip a candidate if it has already been checked
             if cand_id in candidates_checked:
                 continue
 
             # Check whether the candidate is a sub/superface
             cand = H.edges.members(cand_id)
+
+            # In the sup limited case, I only add DAG superfaces
+            # where the difference in size is 1
+            if sup_limited:
+                if abs(len(edge) - len(cand)) != 1:
+                    continue
+
+            # Actually check for encapsulation
+            # and include in the appropriate data structure
             if len(edge) > len(cand):
                 if is_encapsulated(edge, cand):
                     if sub:
                         H.edges[edge_id]["subfaces"].add(cand_id)
+
                     if sup:
                         if "superfaces" in H.edges[cand_id]:
                             H.edges[cand_id]["superfaces"].add(edge_id)
