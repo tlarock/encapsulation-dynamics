@@ -9,16 +9,20 @@ def print_observed_stats(cc):
     print("Computing encapsulation DAG...")
     obs_encap, _, _ = encapsulation_dag(cc)
     print("Number of encapsulation DAG edges in observed data: " + str(obs_encap.number_of_edges()))
-
+    encap_dag_edges = obs_encap.number_of_edges()
+    del obs_encap
     print("Computing overlap DAG...")
     obs_overlap_dag, _, _ = overlap_dag(cc)
     print("Number of overlap DAG in observed data: " + str(obs_overlap_dag.number_of_edges()))
-
+    overlap_dag_edges = obs_overlap_dag.number_of_edges()
+    del obs_overlap_dag
     print("Computing overlap graph...")
     obs_overlap, _, _ = overlap_graph(cc, normalize_weight=False)
+    obs_overlap_edges = obs_overlap.number_of_edges()
     sum_of_weights = sum([data["weight"] for _,_, data in obs_overlap.edges(data=True)])
     print("Number of overlap edges in observed data: " + str(obs_overlap.number_of_edges()))
-    return obs_encap.number_of_edges(), obs_overlap_dag.number_of_edges(), obs_overlap.number_of_edges(), sum_of_weights
+    del obs_overlap
+    return encap_dag_edges, overlap_dag_edges, obs_overlap_edges, sum_of_weights
 
 
 def print_random_stats(cc, obs_encap, obs_overdag, obs_overlap):
@@ -40,7 +44,8 @@ dataset_name = sys.argv[1]
 num_samples = int(sys.argv[2])
 
 print(dataset_name)
-filename = f"../data/{dataset_name}/{dataset_name}-"
+#filename = f"../data/{dataset_name}/{dataset_name}-"
+filename = f"/data/math-networks/math1764/hypergraphs/{dataset_name}/{dataset_name}-"
 print("Reading hyperedges...")
 obs_hyperedges = read_data(filename, multiedges=False)
 print("Done.")
@@ -77,5 +82,6 @@ for i in range(num_samples):
     layer_data[dataset_name]["overlap_sum"].append(overlap_sum)
     print()
 
-with open(f"../results/{dataset_name}/randomization_comparison.pickle", "wb") as fpickle:
+#with open(f"../results/{dataset_name}/randomization_comparison.pickle", "wb") as fpickle:
+with open(f"/data/math-networks/math1764/hypergraphs/results/{dataset_name}/randomization_comparison.pickle", "wb") as fpickle:
     pickle.dump((obs_data[dataset_name], layer_data[dataset_name]), fpickle)

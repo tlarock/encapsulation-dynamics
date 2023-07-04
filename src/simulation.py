@@ -402,7 +402,7 @@ def simultaneous_update_step(H, configuration, results_dict, t,
             # If encapsulation-all dynamics the threshold is the number of
             # subfaces that exist in the hypergraph
             inactive_edge_info["thresholds"] = np.array([max(1, len(H.edges[edge_id]["subfaces"]))
-                                                         for edge_id in H.edges if edge_id not in inactive_edge_info["activated_edges"]])
+                                                         for edge_id in inactive_edge_info["edges"] if edge_id not in inactive_edge_info["activated_edges"]])
 
 
     # Get the indices of hyperedges to activate this step
