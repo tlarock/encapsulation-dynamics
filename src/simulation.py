@@ -306,6 +306,9 @@ def count_active_subfaces(H,
     # For each active edge, increment the active_count for its superfaces
     for edge_id in H.edges.filterby_attr("active", 1):
         inactive_superfaces = H.edges[edge_id]["superfaces"] - inactive_edge_info["activated_edges"]
+        # Constrain single nodes to only activate pairwise hyperedges
+        if len(H.edges.members(edge_id)) == 1:
+            inactive_superfaces = [sup_id for sup_id in inactive_superfaces if len(H.edges.members(sup_id)) == 2]
         for sup_id in inactive_superfaces:
             sup_index = edge_index_lookup[sup_id]
             inactive_edge_info["active_counts"][sup_index] += 1
@@ -330,6 +333,9 @@ def update_active_subface_counts(H,
     for edge_index in edge_indices_to_activate:
         edge_id = inactive_edge_info["edges"][edge_index]
         inactive_superfaces = H.edges[edge_id]["superfaces"] - inactive_edge_info["activated_edges"]
+        # Constrain single nodes to only activate pairwise hyperedges
+        if len(H.edges.members(edge_id)) == 1:
+            inactive_superfaces = [sup_id for sup_id in inactive_superfaces if len(H.edges.members(sup_id)) == 2]
         for sup_id in inactive_superfaces:
             sup_index = edge_index_lookup[sup_id]
             inactive_edge_info["active_counts"][sup_index] += 1
