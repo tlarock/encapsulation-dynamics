@@ -127,7 +127,10 @@ def run_simulation(hyperedges, configuration, results_only=False):
         if configuration["selection_name"] == "simultaneous":
             if configuration["update_name"] in ["up", "down"]:
                 simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, "node")
-            elif configuration["update_name"] in ["subface", "subface-strict", "encapsulation-all", "encapsulation-all-strict"]:
+            elif configuration["update_name"] in ["subface", "subface-strict",
+                                                  "encapsulation-all",
+                                                  "encapsulation-all-strict",
+                                                  "encapsulation-immediate"]:
                 simultaneous_update_step(H, configuration, results_dict, t, inactive_edge_info, configuration["update_name"])
 
             if results_dict["edges_activated"][t] < 1:
@@ -226,6 +229,7 @@ def add_subface_attribute(H, dag_type="both"):
     elif dag_type == "sub":
         sub = True
     elif dag_type == "k-1":
+        sub = True
         sup = True
         sup_limited = True
 
@@ -266,10 +270,11 @@ def add_subface_attribute(H, dag_type="both"):
             # Check whether the candidate is a sub/superface
             cand = H.edges.members(cand_id)
 
-            # In the sup limited case, I only add DAG superfaces
+            # In the limited case, I only add DAG edges
             # where the difference in size is 1
             if sup_limited:
                 if abs(len(edge) - len(cand)) != 1:
+                    candidates_checked.add(cand_id)
                     continue
 
             # Actually check for encapsulation
@@ -410,7 +415,7 @@ def simultaneous_update_step(H, configuration, results_dict, t,
             count_active_nodes(H, inactive_edge_info, edge_index_lookup)
         elif count_type in ["subface", "encapsulation-all"]:
             count_active_subfaces(H, inactive_edge_info, edge_index_lookup, nodes_as_subfaces=True)
-        elif count_type in ["subface-strict", "encapsulation-all-strict"]:
+        elif count_type in ["subface-strict", "encapsulation-all-strict", "encapsulation-immediate"]:
             count_active_subfaces(H, inactive_edge_info, edge_index_lookup, nodes_as_subfaces=False)
 
 
@@ -421,7 +426,9 @@ def simultaneous_update_step(H, configuration, results_dict, t,
         elif configuration["update_name"] in ["up", "subface", "subface-strict"]:
             # If up dynamics the threshold is static. This also applies for subface.
             inactive_edge_info["thresholds"] = configuration["active_threshold"]
-        elif configuration["update_name"] in ["encapsulation-all", "encapsulation-all-strict"]:
+        elif configuration["update_name"] in ["encapsulation-all",
+                                              "encapsulation-all-strict",
+                                              "encapsulation-immediate"]:
             # If encapsulation-all dynamics the threshold is the number of
             # subfaces that exist in the hypergraph
             inactive_edge_info["thresholds"] = np.array([max(1, len(H.edges[edge_id]["subfaces"]))
@@ -458,7 +465,8 @@ def simultaneous_update_step(H, configuration, results_dict, t,
                                      newly_active_nodes,
                                      edge_index_lookup,
                                      nodes_as_subfaces=True)
-    elif count_type in ["subface-strict", "encapsulation-all-strict"]:
+    elif count_type in ["subface-strict", "encapsulation-all-strict",
+                        "encapsulation-immediate"]:
         update_active_subface_counts(H,
                                      inactive_edge_info,
                                      edge_indices_to_activate,
@@ -470,7 +478,9 @@ def simultaneous_update_step(H, configuration, results_dict, t,
     inactive_edge_info["edges"] = np.delete(inactive_edge_info["edges"], edge_indices_to_activate)
     inactive_edge_info["sizes"] = np.delete(inactive_edge_info["sizes"], edge_indices_to_activate)
     inactive_edge_info["active_counts"] = np.delete(inactive_edge_info["active_counts"], edge_indices_to_activate)
-    if configuration["update_name"] in ["down", "encapsulation-all", "encapsulation-all-strict"]:
+    if configuration["update_name"] in ["down", "encapsulation-all",
+                                        "encapsulation-all-strict",
+                                        "encapsulation-immediate"]:
         inactive_edge_info["thresholds"] = np.delete(inactive_edge_info["thresholds"], edge_indices_to_activate)
 
 
