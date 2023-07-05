@@ -84,7 +84,10 @@ def parse_command_line():
                         help="Given a size, drop all hyperedges of that size.")
     parser.add_argument("--layer_randomization", required=False,
                         action="store_true", help="If given, apply layer randomization to the dataset.")
-
+    parser.add_argument("--node_assumption", required=False,
+                        action="store_true", help="If given, use the assumption that all nodes exist in the hypergraph as 1-node hyperedges that can only influence 2-node hyperedges.")
+    parser.add_argument("--encapsulation_all_thresh", required=False,
+                        action="store_true", help="If given, use threshold of all relevant DAG neighbors for update_name. Will not work for non-DAG thresholding.")
     args = parser.parse_args()
     return args
 
@@ -133,6 +136,8 @@ if __name__ == "__main__":
     drop_size = args.drop_hyperedges_size
     _layer_randomization = args.layer_randomization
     no_detail = args.no_detail
+    node_assumption = args.node_assumption
+    encapsulation_all_thresh = args.encapsulation_all_thresh
 
     # Parse configuration file
     config = ConfigParser(os.environ)
@@ -160,13 +165,11 @@ if __name__ == "__main__":
     if largest_cc:
         if not check_hyperedges_connectivity(hyperedges):
             print("Computing largest connected component.")
-            if update_name not in ["subface-strict",
-                                   "encapsulation-all-strict",
-                                   "encapsulation-immediate",
-                                   "encapsulation-empirical"]:
+            if node_assumption:
+                print(f"node_assumption specified for {update_name} dynamics. Removing single nodes from largest CC.")
                 hyperedges = largest_connected_component(hyperedges, remove_single_nodes=True)
             else:
-                print(f"{update_name} dynamics specified; not removing single nodes.")
+                print(f"node_assumption not given for {update_name} dynamics. Single nodes will remain as hyperedges.")
                 hyperedges = largest_connected_component(hyperedges, remove_single_nodes=False)
         else:
             print("Hyperedges already connected. Not computing largest component.")
@@ -177,10 +180,13 @@ if __name__ == "__main__":
     else:
         initial_active = config[config_key].getint("initial_active")
 
-    if threshold_override >= 0:
-        active_threshold = threshold_override
+    if encapsulation_all_thresh:
+        active_threshold = "all"
     else:
-        active_threshold = config[config_key].getint("active_threshold")
+        if threshold_override >= 0:
+            active_threshold = threshold_override
+        else:
+            active_threshold = config[config_key].getint("active_threshold")
 
     # Read configuration parameters
     configuration = {
@@ -193,12 +199,18 @@ if __name__ == "__main__":
         "update_name": update_name,
         "update_function": UPDATE_FUNCT_MAP[update_name],
         "seeding_strategy": seeding_strategy,
-        "seed_function": SEED_FUNCT_MAP[seed_funct]
+        "seed_function": SEED_FUNCT_MAP[seed_funct],
+        "node_assumption": node_assumption
     }
+
+    configuration["encapsulation_update"] = False
+    if update_name in ["subface", "encapsulation-all", "encapsulation-immediate", "encapsulation-empirical"]:
+        configuration["encapsulation_update"] = True
+
 
     print(f"Running simulation with the following parameters:\
             \nHyperedge Selection: {selection_name}\nUpdate Rule: {update_name}\
-          \nSeed strategy: {seeding_strategy}\nSeed Function: {seed_funct}\nNumber of Seeds:\
+          \nNode assumption: {node_assumption}\nSeed strategy: {seeding_strategy}\nSeed Function: {seed_funct}\nNumber of Seeds:\
           {initial_active}\nThreshold: {configuration['active_threshold']}")
 
     if ncpus > 1:
@@ -206,6 +218,9 @@ if __name__ == "__main__":
                                    verbose=True)
     else:
         output = run_many_simulations(hyperedges, configuration, verbose=True)
+
+    if node_assumption:
+            update_name += "-strict"
 
     # Output data
     output_filename = results_path
