@@ -219,7 +219,7 @@ if __name__ == "__main__":
     else:
         output = run_many_simulations(hyperedges, configuration, verbose=True)
 
-    if node_assumption:
+    if not node_assumption:
             update_name += "-strict"
 
     # Output data
