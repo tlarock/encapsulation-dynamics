@@ -63,11 +63,13 @@ def parse_command_line():
     parser.add_argument("--seed_funct", required=False, default="uniform",
                         choices=set(SEED_FUNCT_MAP.keys()),
                         help="Name of seed function.")
+    parser.add_argument("--layer_randomization", required=False,
+                        action="store_true", help="If given, apply layer randomization to the dataset.")
+    parser.add_argument("--node_assumption", required=False,
+                        action="store_true", help="If given, use the assumption that all nodes exist in the hypergraph as 1-node hyperedges that can only influence 2-node hyperedges.")
+    parser.add_argument("--encapsulation_all_thresh", required=False,
+                        action="store_true", help="If given, use threshold of all relevant DAG neighbors for update_name. Will not work for non-DAG thresholding.")
     parser.add_argument("--default_key", type=str, help="Default key for config file.", default="default-arc", required=False)
-    parser.add_argument("--no_detail", action="store_true", help="If true, add nodetail to randomization name. Assumes randomization_number > 0.")
-    parser.add_argument("--randomization_number", type=int, help="If >=0, will \
-                        try to run on that randomization of the dataset.",
-                        default=-1, required=False)
     parser.add_argument("--num_seeds_override", type=int, help="If >=1, overrides \
                         number of seeds argument in config file.",
                         default=-1, required=False)
@@ -77,12 +79,10 @@ def parse_command_line():
     parser.add_argument("--largest_cc", action="store_true",
                         help="If given, compute the largest connected component \
                         of the hypergraph before running simulations.")
-    parser.add_argument("--layer_randomization", required=False,
-                        action="store_true", help="If given, apply layer randomization to the dataset.")
-    parser.add_argument("--node_assumption", required=False,
-                        action="store_true", help="If given, use the assumption that all nodes exist in the hypergraph as 1-node hyperedges that can only influence 2-node hyperedges.")
-    parser.add_argument("--encapsulation_all_thresh", required=False,
-                        action="store_true", help="If given, use threshold of all relevant DAG neighbors for update_name. Will not work for non-DAG thresholding.")
+    parser.add_argument("--randomization_number", type=int, help="If >=0, will \
+                        try to run on that randomization of the dataset.",
+                        default=-1, required=False)
+    parser.add_argument("--no_detail", action="store_true", help="If true, add nodetail to randomization name. Assumes randomization_number > 0.")
     args = parser.parse_args()
     return args
 
