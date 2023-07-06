@@ -9,7 +9,7 @@ from pathlib import Path
 import xgi
 
 import numpy as np
-from utils import read_data, read_hyperedges, largest_connected_component, drop_hyperedges_by_size, check_hyperedges_connectivity
+from utils import read_data, read_hyperedges, largest_connected_component, check_hyperedges_connectivity
 from layer_randomization import layer_randomization
 
 from update_rules import *
@@ -77,8 +77,6 @@ def parse_command_line():
     parser.add_argument("--largest_cc", action="store_true",
                         help="If given, compute the largest connected component \
                         of the hypergraph before running simulations.")
-    parser.add_argument("--drop_hyperedges_size", required=False, default=-1, type=int,
-                        help="Given a size, drop all hyperedges of that size.")
     parser.add_argument("--layer_randomization", required=False,
                         action="store_true", help="If given, apply layer randomization to the dataset.")
     parser.add_argument("--node_assumption", required=False,
@@ -130,7 +128,6 @@ if __name__ == "__main__":
     threshold_override = args.threshold_override
     largest_cc = args.largest_cc
     seed_funct = args.seed_funct
-    drop_size = args.drop_hyperedges_size
     _layer_randomization = args.layer_randomization
     no_detail = args.no_detail
     node_assumption = args.node_assumption
@@ -155,9 +152,6 @@ if __name__ == "__main__":
     hyperedges, results_path = read_input(config, config_key, data_prefix,
                                          dataset_name, randomization_number,
                                          results_path, _layer_randomization, no_detail)
-    if drop_size > 0:
-        print(f"Dropping hyperedges of size {drop_size}")
-        hyperedges = drop_hyperedges_by_size(hyperedges, drop_size)
 
     if largest_cc:
         if not check_hyperedges_connectivity(hyperedges):
@@ -228,9 +222,6 @@ if __name__ == "__main__":
     output_filename += f"runs-{configuration['num_simulations']}_"
     output_filename += seeding_strategy + "_"
     output_filename += seed_funct
-
-    if drop_size > 0:
-        output_filename += f"_drop_size-{drop_size}"
 
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
