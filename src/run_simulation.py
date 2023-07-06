@@ -12,6 +12,8 @@ import numpy as np
 from utils import read_data, read_hyperedges, largest_connected_component, check_hyperedges_connectivity
 from layer_randomization import layer_randomization
 
+from simulation import *
+
 from update_rules import *
 # ToDo: There is probably a nicer way to export this!
 UPDATE_FUNCT_MAP = {
@@ -46,9 +48,6 @@ SEED_FUNCT_MAP = {
     "dag_largest_component": dag_largest_component,
     "smallest_first": smallest_first_seed
 }
-
-from simulation import *
-from plot_simulation_results import *
 
 
 def parse_command_line():
@@ -141,6 +140,7 @@ if __name__ == "__main__":
     dataset_name = config[config_key]["dataset_name"]
     data_prefix = config[default_key]["data_prefix"]
 
+    # Set results path
     results_prefix = config[default_key]["results_prefix"]
     results_path = f"{results_prefix}{dataset_name}/"
 
@@ -149,6 +149,7 @@ if __name__ == "__main__":
 
     results_path += f"{dataset_name}"
 
+    # Read the input and update results path based on input parameters
     hyperedges, results_path = read_input(config, config_key, data_prefix,
                                          dataset_name, randomization_number,
                                          results_path, _layer_randomization, no_detail)
@@ -194,6 +195,7 @@ if __name__ == "__main__":
         "node_assumption": node_assumption
     }
 
+    # Set flag for encapsulation-based update
     configuration["encapsulation_update"] = False
     if update_name in ["encapsulation", "encapsulation-immediate", "encapsulation-empirical"]:
         configuration["encapsulation_update"] = True
@@ -204,16 +206,16 @@ if __name__ == "__main__":
           \nNode assumption: {node_assumption}\nSeed strategy: {seeding_strategy}\nSeed Function: {seed_funct}\nNumber of Seeds:\
           {initial_active}\nThreshold: {configuration['active_threshold']}")
 
+    # If more than 1 CPU specified, run in parallel. Else run sequentially.
     if ncpus > 1:
-        output = run_many_parallel(hyperedges, configuration, ncpus,
-                                   verbose=True)
+        output = run_many_parallel(hyperedges, configuration, ncpus, verbose=True)
     else:
         output = run_many_simulations(hyperedges, configuration, verbose=True)
 
+    # Construct output filename based on configuration
     if not node_assumption:
             update_name += "-strict"
 
-    # Output data
     output_filename = results_path
     output_filename += f"_{selection_name}_{update_name}_"
     output_filename += f"steps-{configuration['steps']}_"
@@ -223,6 +225,7 @@ if __name__ == "__main__":
     output_filename += seeding_strategy + "_"
     output_filename += seed_funct
 
+    # Output data as pickle ToDo: gzip by default
     with open(output_filename + ".pickle", "wb") as fpickle:
         pickle.dump(output, fpickle)
 
