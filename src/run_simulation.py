@@ -17,10 +17,7 @@ from update_rules import *
 UPDATE_FUNCT_MAP = {
     "up": absolute_update_up,
     "down": absolute_update_down,
-    "subface": None,
-    "subface-strict": None,
-    "encapsulation-all": None,
-    "encapsulation-all-strict": None,
+    "encapsulation": None,
     "encapsulation-immediate": None,
     "encapsulation-empirical": None
 }
@@ -204,7 +201,7 @@ if __name__ == "__main__":
     }
 
     configuration["encapsulation_update"] = False
-    if update_name in ["subface", "encapsulation-all", "encapsulation-immediate", "encapsulation-empirical"]:
+    if update_name in ["encapsulation", "encapsulation-immediate", "encapsulation-empirical"]:
         configuration["encapsulation_update"] = True
 
 

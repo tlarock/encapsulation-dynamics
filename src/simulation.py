@@ -165,8 +165,12 @@ def initialize_dynamics(rng, hyperedges, configuration):
 
     # For subface simulations, need to
     # compute encapsulation relationships
-    if configuration["update_name"] in ["subface"]:
-        add_subface_attribute(H, dag_type="super")
+    if configuration["update_name"] in ["encapsulation"]:
+        if configuration["active_threshold"] != "all":
+            # If an integer threshold, just need superfaces
+            add_subface_attribute(H, dag_type="super")
+        else:
+            add_subface_attribute(H, dag_type="both")
     elif configuration["update_name"] in ["encapsulation-all",
                                          "encapsulation-empirical"]:
         add_subface_attribute(H, dag_type="both")
