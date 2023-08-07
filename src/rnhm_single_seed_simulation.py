@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 
 # Simulation parameters
 configuration = {
-    "steps": 5,
-    "active_threshold": 1,
+    "steps": 10,
+    "active_threshold": "all",
     "num_simulations": 50
 }
 

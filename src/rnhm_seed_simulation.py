@@ -23,11 +23,11 @@ from matplotlib import ticker
 configuration = {
     "initial_active": 1,
     "steps": 10,
-    "active_threshold": 1,
-    "num_simulations": 5
+    "active_threshold": "all",
+    "num_simulations": 100
 }
 
-configuration["num_hypergraphs"] = 5
+configuration["num_hypergraphs"] = 25
 configuration["seeding_strategy"] = "edge"
 configuration["selection_name"] = "simultaneous"
 configuration["selection_function"] = None
@@ -39,7 +39,7 @@ configuration["node_assumption"] = False
 N = 20
 max_size = 4
 H = 5
-enforce_connectivity = True
+enforce_connectivity = False
 
 seed_values = np.array(list(range(1, 40)))
 epsilon_vals = [0.0, 0.5, 1.0]
@@ -103,12 +103,14 @@ for seed_funct in act_results:
 fig, axs = plt.subplots(1, 3, figsize=(14, 4), squeeze=False, gridspec_kw={'width_ratios':[0.9, 0.6, 0.9]})
 row_idx = 0
 col_idx = 0
+title_map = {"uniform": "Uniform", "smallest_first":"Smallest First"}
 for seed_funct in seed_functs:
     denom = max(num_edges_dict.values())
     for eps in epsilon_combinations:
         label = fr"$\epsilon_2={eps[0]},\epsilon_3={eps[1]}$ ({dag_edges_dict[eps]} DAG Edges)"
         axs[row_idx][col_idx].errorbar(seed_values / denom, act_mean[seed_funct][eps], act_std[seed_funct][eps], alpha=0.7, label=label)
-    axs[row_idx][col_idx].set(xlabel="Fraction of Seed Edges", ylabel="Avg. Proportion Edges Activated", title=seed_funct,
+    axs[row_idx][col_idx].set(xlabel="Fraction of Seed Edges", ylabel="Avg. Proportion Edges Activated",
+                              title=title_map[seed_funct],
                              #xticks = seed_values / denom,
                               ylim=(-0.1, 1.1)
                              )
@@ -128,4 +130,4 @@ axs[0][1].axis('off')
 fig.legend(reversed(h), reversed(l), ncols=1, loc='lower left', bbox_to_anchor=(0.365, 0.25), frameon=False)
 
 fig.tight_layout()
-fig.savefig(f"../results/plots/RNHM-synthetic-seed-simulation-unif-vs-smallest.pdf", dpi=150)
+fig.savefig(f"../results/plots/RNHM-synthetic-seed-simulation-unif-vs-smallest-test.pdf", dpi=150)

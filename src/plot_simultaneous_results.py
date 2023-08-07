@@ -7,8 +7,8 @@ import matplotlib_defaults
 
 title_mapping = {"subface": "Non-Strict Encapsulation",
                  "subface-strict": "Strict Encapsulation",
-                 "encapsulation-immediate-strict": "Encapsulation Strict",
-                  "encapsulation-immediate": "Encapsulation Non-strict",
+                 "encapsulation-immediate-strict": "Strict Encapsulation",
+                  "encapsulation-immediate": "Non-strict Encapsulation",
                 "encapsulation-empirical-strict": "Empirical Encapsulation"}
 filename_mapping = {"subface": "encapsulation", "subface-strict": "encapsulation-strict",  "encapsulation-all": "encapsulation-all"}
 
@@ -23,7 +23,6 @@ step = 25
 
 
 datasets = [
-    #("coauth-DBLP", 25, 25, 100_000),
     ("coauth-MAG-Geology", 50, 50, 500_000),
     ("coauth-MAG-History", 50, 50, 100_000),
     ("contact-high-school", 25, 25, 5000),
