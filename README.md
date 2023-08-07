@@ -83,7 +83,7 @@ If you want to run simulations in parallel, you can swap `run_many_simulations(h
 ## Important parameters
 The relevant options for dynamics, controlled by `update_funct` positional argument (command line) and `configuration['update_name']` dictionary entry (API), are:
 * `'encapsulation'`: encapsulation dynamics including all encapsulation relationships
-* `'encapsulation-immediate'`: encapsulation dynamics including only immediate encapdulation relationships (i.e., `k->k-1` DAG edges)
+* `'encapsulation-immediate'`: encapsulation dynamics including only immediate encapsulation relationships (i.e., `k->k-1` DAG edges)
 * `'encapsulation-empirical'`: relaxation of `encapsulation-immediate` dynamics including relationships between size `k` and subhyperedges of maximum size `k'<k` existing in the hypergraph (e.g., a hyperedge of size 5 has no encapsulation relationships with hyperedges of size 4, but some with sizes 3 and 2, the edges to the size 3 hyperedges will "count" for the dynamics)
 
 Dynamics are strict by default. For non-strict dynamics, specify `--node_assumption` or set `configuration['node_assumption']=True`.
