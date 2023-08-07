@@ -77,6 +77,9 @@ random_hyperedges = largest_connected_component(layer_randomization(hyperedges),
 output_random = run_many_simulations(random_hyperedges, configuration)
 fig, axs = plot_cumulative_averages(output_observed, output_random, normalized=False)
 ```
+
+If you want to run simulations in parallel, you can swap `run_many_simulations(hyperedges, configuration)` for `run_many_parallel(hyperedges, configuration, ncpus)`, where `ncpus` is an `int` corresponding to the number of cpus to use.
+
 ## Important parameters
 The relevant options for dynamics, controlled by `update_funct` positional argument (command line) and `update_name` dictionary entry (API), are:
 * `'encapsulation'`: encapsulation dynamics including all encapsulation relationships
