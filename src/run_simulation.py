@@ -57,8 +57,8 @@ def parse_command_line():
     parser.add_argument("selection_funct", type=str, help="Name of selection function to use.")
     parser.add_argument("update_funct", type=str, help="Name of update function to use.")
     parser.add_argument("ncpus", type=int, help="Number of CPUS to use.")
-    parser.add_argument("--seeding_strategy", type=str, required=False, choices=["node", "edge"], default="node",
-            help="Seeding strategy to use. Default is node seeding.")
+    parser.add_argument("--seeding_strategy", type=str, required=False, choices=["node", "edge"], default="edge",
+            help="Seeding strategy to use. Default is edge seeding.")
     parser.add_argument("--seed_funct", required=False, default="uniform",
                         choices=set(SEED_FUNCT_MAP.keys()),
                         help="Name of seed function.")
