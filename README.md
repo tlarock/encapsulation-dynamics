@@ -81,7 +81,7 @@ fig, axs = plot_cumulative_averages(output_observed, output_random, normalized=F
 If you want to run simulations in parallel, you can swap `run_many_simulations(hyperedges, configuration)` for `run_many_parallel(hyperedges, configuration, ncpus)`, where `ncpus` is an `int` corresponding to the number of cpus to use.
 
 ## Important parameters
-The relevant options for dynamics, controlled by `update_funct` positional argument (command line) and `update_name` dictionary entry (API), are:
+The relevant options for dynamics, controlled by `update_funct` positional argument (command line) and `configuration['update_name']` dictionary entry (API), are:
 * `'encapsulation'`: encapsulation dynamics including all encapsulation relationships
 * `'encapsulation-immediate'`: encapsulation dynamics including only immediate encapdulation relationships (i.e., `k->k-1` DAG edges)
 * `'encapsulation-empirical'`: relaxation of `encapsulation-immediate` dynamics including relationships between size `k` and subhyperedges of maximum size `k'<k` existing in the hypergraph (e.g., a hyperedge of size 5 has no encapsulation relationships with hyperedges of size 4, but some with sizes 3 and 2, the edges to the size 3 hyperedges will "count" for the dynamics)
