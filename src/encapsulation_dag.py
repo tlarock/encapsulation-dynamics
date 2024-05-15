@@ -50,6 +50,7 @@ def encapsulation_dag(hyperedges):
         for node in he:
             candidates.update([rev_map[i] for i in nth[node]])
         # for each candidate
+        # ToDo: Note: This is no longer being used, should remove
         candidates_checked = set()
         for cand in candidates:
             if cand in candidates_checked:
