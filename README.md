@@ -18,7 +18,7 @@ The results from the paper can be reproduced using the corresponding files as li
 * Figure 6 => `notebooks/dag_visualisation.ipynb`
 * Figure 7 => `src/rnhm_single_seed_simulation.py`
 * Figure 8 => `src/rnhm_seed_simulation.py`
-* Figure 9 => `notebooks/plot_simultaneous_simulations.ipynb` (after generating results using `src/run_simulation.py` as described below) 
+* Figure 9,10 => `notebooks/plot_simultaneous_simulations.ipynb` (after generating results using `src/run_simulation.py` as described below) 
 
 # General Usage
 There are two main ways to run simulations of encapsulation dynamics. The file `run_simulation.py` can be used in conjunction with a configuration file to run simulations from the command line. Alternatively, simulation parameters can be specified directly in a dictionary and passed to one of the `run_*_simulations` functions found in `simulations.py`.
