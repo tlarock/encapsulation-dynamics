@@ -6,8 +6,6 @@ from collections import Counter
 sys.path.append("../src/")
 from utils import read_data
 from encapsulation_dag import *
-sys.path.append("../../hypergraph/")
-from hypergraph import hypergraph
 from layer_randomization import layer_randomization
 sys.path.append("../../tr-dag-cycles/")
 from cycle_utilities import tr
