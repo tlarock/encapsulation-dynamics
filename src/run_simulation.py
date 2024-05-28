@@ -68,7 +68,8 @@ def parse_command_line():
                         action="store_true", help="If given, use the assumption that all nodes exist in the hypergraph as 1-node hyperedges that can only influence 2-node hyperedges.")
     parser.add_argument("--encapsulation_all_thresh", required=False,
                         action="store_true", help="If given, use threshold of all relevant DAG neighbors for update_name. Will not work for non-DAG thresholding.")
-    parser.add_argument("--default_key", type=str, help="Default key for config file.", default="default-arc", required=False)
+    parser.add_argument("--default_key", type=str, help="Default key for config
+                        file.", default="default-local", required=False)
     parser.add_argument("--num_seeds_override", type=int, help="If >=1, overrides \
                         number of seeds argument in config file.",
                         default=-1, required=False)

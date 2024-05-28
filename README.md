@@ -46,7 +46,7 @@ read_function = read_data
 
 Once you have created this configuration file, you can run the simulations with:
 ``` 
-python run_simulation.py configuration_file.ini contact-primary-school simultaneous encapsulation-immediate NCPU
+python run_simulation.py configurations.ini contact-primary-school simultaneous encapsulation-immediate NCPU
 ```
 
 Using the configuration file, this command will run 25 simulations of 25 steps using NCPUs (an integer number of CPUs to use) and a threshold of 1 active subhyperedge. Seeding will be a single uniform random edge (the default combined with `initial_active=1` in the configuraiton file; use command line option `--seed_funct` to control the seed function).
