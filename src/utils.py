@@ -121,7 +121,7 @@ def largest_connected_component(hyperedges, remove_single_nodes=False):
     If given, can combine multiple random hypergraphs by giving a list of
     random_nums. By default uses results on hypergraph 0.
 """
-def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
+def read_pickles(results_prefix, random_nums = [0], params_dict = dict(), print_exceptions=True):
 
 
     obs_file = results_prefix + f"_{params_dict['selection']}_{params_dict['update']}_steps-{params_dict['steps']}_t-{params_dict['threshold']}_ia-{params_dict['ia']}"
@@ -155,8 +155,9 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
         with open(obs_file, "rb") as fpickle:
             output_obs = pickle.load(fpickle)
     except Exception as e:
-        print("Exception: " + str(e))
         output_obs = None
+        if print_exceptions:
+            print("Exception: " + str(e))
 
     try:
         if len(random_nums) == 1:
@@ -165,8 +166,9 @@ def read_pickles(results_prefix, random_nums = [0], params_dict = dict()):
         else:
             output_rnd = aggregate_rand_pickles(rnd_template, random_nums)
     except Exception as e:
-        print("Exception: " + str(e))
         output_rnd = None
+        if print_exceptions:
+            print("Exception: " + str(e))
 
     return output_obs, output_rnd
 
